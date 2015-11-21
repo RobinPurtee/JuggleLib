@@ -9,6 +9,9 @@ public:
 
     ~Trajectory(void);
 
+    static Trajectory* BuildTrajectoryFromTimeDistance(double time, double distance); 
+
+
     /**
      * Get the total distance covered horizontally by the trajectory
      * @return the total horizontal distance of the trajectory
