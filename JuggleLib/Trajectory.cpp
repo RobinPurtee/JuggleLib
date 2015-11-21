@@ -33,6 +33,29 @@ Trajectory::~Trajectory(void)
 
 
 /**
+ * Create a Trajectory that travels a given distance over a given time
+ * @param double time - the number of second the trip will take
+ * @param double distance - the number of meters to cover horizontaly
+ *
+ * @return Trajectory* - a pointer to a new trajectory object that follows given path
+ */
+Trajectory* Trajectory::BuildTrajectoryFromTimeDistance(double time, double distance)
+{
+    
+     double vVelocity(0.0);
+     double hVelocity(0.0);
+     if(0.0 != time)
+     {
+        vVelocity = GRAVITY / (time / 2.0); 
+        if(0.0 != distance)
+        {
+            hVelocity = distance / time;
+        }
+     }
+     return new Trajectory(vVelocity, hVelocity);
+}
+
+/**
  * Calculate the horizontal velocity given the vector of the object
  *
  * @param velocity - the velocity of the object vector
@@ -115,7 +138,7 @@ double Trajectory::CalcRawHeight(double vVelocity, double initY)
     // the initial height is not zero take this into account, otherwise we can optimize the calculation
     if (0.0 != initY) 
     {
-        ret *= vVelocity;
+        ret *= vVelocity;               // ret = vertical velicity squared
         ret += 2 * GRAVITY * initY;
         ret = std::sqrt(ret);
     }

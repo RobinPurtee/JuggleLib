@@ -37,17 +37,14 @@ public:
 private:
     struct QueItem
     {
-        int swap;
+        int siteswap;
         std::shared_ptr<Prop> prop;
 
         bool operator<(const QueItem& rhs)
         {
-            return swap < rhs.swap;
+            return siteswap < rhs.siteswap;
         }
     };
-
-
-
 
     std::list<QueItem> theList;
 
