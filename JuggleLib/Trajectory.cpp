@@ -3,7 +3,7 @@
 #include <cmath>
 
 
-static const double GRAVITY = -980.665; // in centimeters per second
+const float Trajectory::GRAVITY = -980.665;
 
 
 
@@ -13,6 +13,7 @@ Trajectory::Trajectory(void)
 ,vertical_velocity_(0.0)
 ,initial_velocity_(0.0)
 ,initial_theta_(0.0)
+,tan_theta_(0.0)
 {
     UpdateCalculatedValues();
 }
@@ -23,7 +24,7 @@ Trajectory::Trajectory(double hVelocity, double vVelocity)
 ,vertical_velocity_(vVelocity)
 {
     initial_velocity_ = CalcVelocity(hVelocity, vVelocity);
-    initial_theta_ = CalcTheta(hVelocity, vVelocity);
+    SetInitialTheta(CalcTheta(hVelocity, vVelocity));
     UpdateCalculatedValues();
 }
 
@@ -39,20 +40,20 @@ Trajectory::~Trajectory(void)
  *
  * @return Trajectory* - a pointer to a new trajectory object that follows given path
  */
-Trajectory* Trajectory::BuildTrajectoryFromTimeDistance(double time, double distance)
+Trajectory* Trajectory::BuildFromTimeDistance(double time, double distance)
 {
     
      double vVelocity(0.0);
      double hVelocity(0.0);
      if(0.0 != time)
      {
-        vVelocity = GRAVITY / (time / 2.0); 
+        vVelocity = GRAVITY * (time / 2.0); 
         if(0.0 != distance)
         {
             hVelocity = distance / time;
         }
      }
-     return new Trajectory(vVelocity, hVelocity);
+     return new Trajectory(hVelocity, vVelocity);
 }
 
 /**
@@ -64,7 +65,7 @@ Trajectory* Trajectory::BuildTrajectoryFromTimeDistance(double time, double dist
  */
 double Trajectory::CalcHorizontalVelocity(double velocity, double theta) 
 {
-    double hVelocity = 0.0;
+    double hVelocity(0.0);
     if (0.0 != velocity) 
     {
         hVelocity = velocity * std::cos(theta);
@@ -81,7 +82,7 @@ double Trajectory::CalcHorizontalVelocity(double velocity, double theta)
  */
 double Trajectory::CalcVerticalVelocity(double velocity, double theta) 
 {
-    double verticalVelocity = 0.0;
+    double verticalVelocity(0.0);
     if (0.0 != velocity) 
     {
         verticalVelocity = velocity * std::sin(theta);
@@ -186,7 +187,12 @@ double Trajectory::CalcHeightAtTime(double vVelocity, double curTime)
     double height = 0.0;
     if (0.0 != curTime) 
     {
-        height = (GRAVITY * (curTime * curTime))/2 + (vVelocity * curTime);
+        double x = GetDistanceAtTime(curTime);
+        double square = (x / vVelocity);
+        square *= square;
+        square *= 0.5 * GRAVITY;
+        height = (x * tan_theta_) - square;
+            //(GRAVITY * (x * x))/(2 + (vVelocity * curTime));
     }
     return height;
 }
@@ -230,8 +236,8 @@ void Trajectory::UpdateCalculatedValues()
 void Trajectory::SetHorizontalVelocity(double velocity) 
 {
     horzontal_velocity_ = velocity;
-    initial_velocity_ = CalcVelocity(horzontal_velocity_, vertical_velocity_);
-    initial_theta_ = CalcTheta(horzontal_velocity_, vertical_velocity_);
+    SetInitialVelocity(CalcVelocity(horzontal_velocity_, vertical_velocity_));
+    SetInitialTheta(CalcTheta(horzontal_velocity_, vertical_velocity_));
     UpdateCalculatedValues();
 }
 
@@ -242,8 +248,8 @@ void Trajectory::SetHorizontalVelocity(double velocity)
 void Trajectory::SetVerticalVelocity(double velocity) 
 {
     vertical_velocity_ = velocity;
-    initial_velocity_ = CalcVelocity(horzontal_velocity_, vertical_velocity_);
-    initial_theta_ = CalcTheta(horzontal_velocity_, vertical_velocity_);
+    SetInitialVelocity(CalcVelocity(horzontal_velocity_, vertical_velocity_));
+    SetInitialTheta(CalcTheta(horzontal_velocity_, vertical_velocity_));
     UpdateCalculatedValues();
 }
 
@@ -268,6 +274,7 @@ void Trajectory::SetInitialTheta(double theta)
     initial_theta_ = theta;
     horzontal_velocity_ = CalcHorizontalVelocity(initial_velocity_, initial_theta_);
     vertical_velocity_ = CalcVerticalVelocity(initial_velocity_, initial_theta_);
+    tan_theta_ = std::tan(initial_theta_);
     UpdateCalculatedValues();
 }
 
@@ -333,15 +340,15 @@ double Trajectory::GetCurrentVelocity(double curTime)
 std::ostream& operator<<(std::ostream& stream, const Trajectory& trajectory)
 {
     std::streamsize width = stream.width(8);
-    std::streamsize prescision = stream.precision(3);
-    stream << "Initial launch height: " << trajectory.GetLaunchHeight();
-    stream << "Velocity: " << trajectory.GetInitialVelocity() << "cm/s, "; 
-    stream << "Angle: " << trajectory.GetInitialTheta() << "radians, ";
-    stream << "Vertical Velocity: " << trajectory.GetVerticalVelocity()<< "cm/s, "; 
-    stream << "Horizontal Velocity: " << trajectory.GetHorizontalVelocity() << "cm/s, ";
-    stream << "Maximum Height: " << trajectory.GetMaxHeight() << " cm, ";
-    stream << "Range: " << trajectory.GetRange() << "cm,";
-    stream << "Flight Time: " << trajectory.GetFlightTime() << "seconds";
+    std::streamsize prescision = stream.precision(8);
+    stream << "Initial launch height: " << trajectory.GetLaunchHeight() << std::endl;
+    stream << "Velocity: " << trajectory.GetInitialVelocity() << "cm/s " << std::endl; 
+    stream << "Angle: " << trajectory.GetInitialTheta() << "radians " << std::endl;
+    stream << "Vertical Velocity: " << trajectory.GetVerticalVelocity()<< "cm/s " << std::endl; 
+    stream << "Horizontal Velocity: " << trajectory.GetHorizontalVelocity() << "cm/s " << std::endl;
+    stream << "Maximum Height: " << trajectory.GetMaxHeight() << " cm " << std::endl;
+    stream << "Range: " << trajectory.GetRange() << "cm" << std::endl;
+    stream << "Flight Time: " << trajectory.GetFlightTime() << "seconds" << std::endl;
 
     stream.width(width);
     stream.precision(prescision);

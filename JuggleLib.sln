@@ -3,6 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JuggleLib", "JuggleLib\JuggleLib.vcxproj", "{7CA8B697-9475-4E18-88F9-902F3C42D71D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TrajectoryPlayConsole", "TrajectoryPlayConsole\TrajectoryPlayConsole.vcxproj", "{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7CA8B697-9475-4E18-88F9-902F3C42D71D} = {7CA8B697-9475-4E18-88F9-902F3C42D71D}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -25,6 +30,14 @@ Global
 		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Release|Win32.Build.0 = Release|Win32
 		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Release|x64.ActiveCfg = Release|x64
 		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Release|x64.Build.0 = Release|x64
+		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Debug|ARM.ActiveCfg = Debug|Win32
+		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Debug|Win32.Build.0 = Debug|Win32
+		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Debug|x64.ActiveCfg = Debug|Win32
+		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Release|ARM.ActiveCfg = Release|Win32
+		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Release|Win32.ActiveCfg = Release|Win32
+		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Release|Win32.Build.0 = Release|Win32
+		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

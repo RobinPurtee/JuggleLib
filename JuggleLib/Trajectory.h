@@ -4,12 +4,15 @@
 class Trajectory
 {
 public:
+    static const float GRAVITY; // in centimeters per second
+
+
     Trajectory(void);
     Trajectory(double hVelocity, double vVelocity);
 
     ~Trajectory(void);
 
-    static Trajectory* BuildTrajectoryFromTimeDistance(double time, double distance); 
+    static Trajectory* BuildFromTimeDistance(double time, double distance); 
 
 
     /**
@@ -95,14 +98,15 @@ private:
     double CalcFlightTime(double vVelocity, double initY);
     void UpdateCalculatedValues();
 
-    double horzontal_velocity_;      // the initial velocity on the horizontal axis (v * cos theta)
+    double horzontal_velocity_;     // the initial velocity on the horizontal axis (v * cos theta)
     double vertical_velocity_;      // the initial velocity on the vertical axis (v * sin theta)
     double initial_velocity_;       // the initial velocity of the object (v)
     double initial_theta_;          // the angle of the init vector of the object
-    double flight_time_;     // the total flight time of the object
-    double range_;          // the total distance traveled by the object
-    double max_height_;         // the maximum height of the trajectory
-    double launch_height_;      // the height the projectile is launched from 
+    double tan_theta_;              // the tangent of theta used for height calculations
+    double flight_time_;            // the total flight time of the object
+    double range_;                  // the total distance traveled by the object
+    double max_height_;             // the maximum height of the trajectory
+    double launch_height_;          // the height the projectile is launched from 
 };
 
 #include <ostream>
