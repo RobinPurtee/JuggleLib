@@ -3,7 +3,7 @@
 #include <cmath>
 
 
-const float Trajectory::GRAVITY = -980.665;
+const float Trajectory::GRAVITY = 980.665;
 
 
 
@@ -89,7 +89,6 @@ double Trajectory::CalcVerticalVelocity(double velocity, double theta)
     }
     return verticalVelocity;
 }
-
 /**
  * Calculate the vector's velocity from the  horizontal and vertical velocities
  *
@@ -173,7 +172,7 @@ double Trajectory::CalcRange(double hVelocity, double vVelocity, double initY)
 double Trajectory::CalcTimeToMaxHeight(double vVelocity) 
 {
     // time = -Vv / g
-    return -vVelocity / GRAVITY;
+    return vVelocity / GRAVITY;
 }
 
 /**
@@ -182,16 +181,14 @@ double Trajectory::CalcTimeToMaxHeight(double vVelocity)
  * @param curTime - the time to calculate the height at
  * @return the height of the object in centimeters
  */
-double Trajectory::CalcHeightAtTime(double vVelocity, double curTime) 
+double Trajectory::CalcHeightAtTime(double curTime) 
 {
     double height = 0.0;
     if (0.0 != curTime) 
     {
-        double x = GetDistanceAtTime(curTime);
-        double square = (x / vVelocity);
-        square *= square;
-        square *= 0.5 * GRAVITY;
-        height = (x * tan_theta_) - square;
+        double rawHeight = GetVerticalVelocity() * curTime;
+        double gravityResistance = ((curTime * curTime) * GRAVITY) / 2.0f;  
+        height = rawHeight - gravityResistance;
             //(GRAVITY * (x * x))/(2 + (vVelocity * curTime));
     }
     return height;
@@ -204,7 +201,7 @@ double Trajectory::CalcHeightAtTime(double vVelocity, double curTime)
  */
 double Trajectory::CalcHeight(double vVelocity) 
 {
-    return CalcHeightAtTime(vVelocity, CalcTimeToMaxHeight(vVelocity));
+    return CalcHeightAtTime(CalcTimeToMaxHeight(vVelocity));
 }
 
 /**
@@ -311,7 +308,7 @@ double Trajectory::GetHeightAtTime(double curTime)
     double height = GetLaunchHeight();
     if (0.0 != curTime)
     {
-        height += CalcHeightAtTime(GetVerticalVelocity(), curTime);
+        height += CalcHeightAtTime(curTime);
     }
     return height;
 }

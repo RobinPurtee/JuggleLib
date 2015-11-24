@@ -93,7 +93,7 @@ private:
     double CalcRawHeight(double vVelocity, double initY); 
     double CalcRange(double hVelocity, double vVelocity, double initY);
     double CalcTimeToMaxHeight(double vVelocity);
-    double CalcHeightAtTime(double vVelocity, double curTime);
+    double CalcHeightAtTime(double curTime);
     double CalcHeight(double vVelocity);
     double CalcFlightTime(double vVelocity, double initY);
     void UpdateCalculatedValues();
