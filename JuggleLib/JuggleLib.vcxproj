@@ -181,14 +181,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="DropException.h" />
+    <ClInclude Include="Hand.h" />
     <ClInclude Include="JuggleLib.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Prop.h" />
-    <ClInclude Include="PropQue.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Pass.h" />
     <ClInclude Include="Trajectory.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DropException.cpp" />
+    <ClCompile Include="Hand.cpp" />
     <ClCompile Include="JuggleLib.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -199,8 +203,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Prop.cpp" />
-    <ClCompile Include="PropQue.cpp" />
     <ClCompile Include="Trajectory.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

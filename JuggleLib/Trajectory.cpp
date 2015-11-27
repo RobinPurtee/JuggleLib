@@ -89,6 +89,7 @@ double Trajectory::CalcVerticalVelocity(double velocity, double theta)
     }
     return verticalVelocity;
 }
+
 /**
  * Calculate the vector's velocity from the  horizontal and vertical velocities
  *

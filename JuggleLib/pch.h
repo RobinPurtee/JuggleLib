@@ -12,3 +12,5 @@
 #include <windows.h>
 #include <ostream>
 #include <string>
+#include <algorithm>
+#include <exception>
