@@ -56,10 +56,9 @@ void Hand::Toss()
 
 void Hand::Catch(Prop* prop)
 {
-    prop->Catch(this);
+    prop->Catch();
     propQue.push_back(prop);
     state = State::CATCH;
-    prop->Caught(this);
 }
 
 void Hand::Count()

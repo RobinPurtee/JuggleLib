@@ -18,11 +18,12 @@
     <ClInclude Include="JuggleLib.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="Prop.h" />
     <ClInclude Include="Trajectory.h" />
-    <ClInclude Include="Hand.h" />
     <ClInclude Include="DropException.h" />
-    <ClInclude Include="Pass.h" />
+    <ClInclude Include="..\include\DropException.h" />
+    <ClInclude Include="..\include\Hand.h" />
+    <ClInclude Include="..\include\Pass.h" />
+    <ClInclude Include="..\include\Prop.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
