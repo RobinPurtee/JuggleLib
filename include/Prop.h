@@ -27,7 +27,7 @@ public:
     /**
      *  Get the current state of the Prop
      */
-    Prop::State GetState();
+    Prop::State get_state();
     
     /**
      * The current count away from the next hand
@@ -55,7 +55,6 @@ private:
     struct PropStateMachine;
     std::shared_ptr<PropStateMachine> stateMachine;
     int id;
-    IPropResponder* responder;
 
 };
 

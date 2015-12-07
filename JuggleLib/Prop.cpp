@@ -129,6 +129,11 @@ Prop::~Prop(void)
 {
 }
 
+Prop::State Prop::get_state()
+{
+    return static_cast<Prop::State>(*(stateMachine->current_state()));
+}
+
 
 /**
  * Start accelorating the prop

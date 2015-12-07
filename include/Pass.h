@@ -11,6 +11,10 @@ class Hand;
  */
 struct Pass
 {
+    Pass(int swap, Hand* dest) 
+        :  siteswap(swap)
+        ,  destination(dest)
+    {}
     int siteswap;
     Hand* destination;
 };
