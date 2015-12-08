@@ -9,42 +9,35 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TrajectoryPlayConsole", "Tr
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "untitests", "untitests\untitests.vcxproj", "{EFFE40D5-A62A-40A8-9F48-42A3E7EAACB8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7CA8B697-9475-4E18-88F9-902F3C42D71D} = {7CA8B697-9475-4E18-88F9-902F3C42D71D}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|ARM = Debug|ARM
 		Debug|Win32 = Debug|Win32
 		Debug|x64 = Debug|x64
-		Release|ARM = Release|ARM
 		Release|Win32 = Release|Win32
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Debug|ARM.ActiveCfg = Debug|ARM
-		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Debug|ARM.Build.0 = Debug|ARM
 		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Debug|Win32.ActiveCfg = Debug|Win32
 		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Debug|Win32.Build.0 = Debug|Win32
 		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Debug|x64.ActiveCfg = Debug|x64
 		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Debug|x64.Build.0 = Debug|x64
-		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Release|ARM.ActiveCfg = Release|ARM
-		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Release|ARM.Build.0 = Release|ARM
 		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Release|Win32.ActiveCfg = Release|Win32
 		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Release|Win32.Build.0 = Release|Win32
 		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Release|x64.ActiveCfg = Release|x64
 		{7CA8B697-9475-4E18-88F9-902F3C42D71D}.Release|x64.Build.0 = Release|x64
-		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Debug|ARM.ActiveCfg = Debug|Win32
 		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Debug|Win32.ActiveCfg = Debug|Win32
 		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Debug|Win32.Build.0 = Debug|Win32
 		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Debug|x64.ActiveCfg = Debug|Win32
-		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Release|ARM.ActiveCfg = Release|Win32
 		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Release|Win32.ActiveCfg = Release|Win32
 		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Release|Win32.Build.0 = Release|Win32
 		{FE1B4D2F-2A52-443B-91D1-65BC1948EBFF}.Release|x64.ActiveCfg = Release|Win32
-		{EFFE40D5-A62A-40A8-9F48-42A3E7EAACB8}.Debug|ARM.ActiveCfg = Debug|Win32
 		{EFFE40D5-A62A-40A8-9F48-42A3E7EAACB8}.Debug|Win32.ActiveCfg = Debug|Win32
 		{EFFE40D5-A62A-40A8-9F48-42A3E7EAACB8}.Debug|Win32.Build.0 = Debug|Win32
 		{EFFE40D5-A62A-40A8-9F48-42A3E7EAACB8}.Debug|x64.ActiveCfg = Debug|Win32
-		{EFFE40D5-A62A-40A8-9F48-42A3E7EAACB8}.Release|ARM.ActiveCfg = Release|Win32
 		{EFFE40D5-A62A-40A8-9F48-42A3E7EAACB8}.Release|Win32.ActiveCfg = Release|Win32
 		{EFFE40D5-A62A-40A8-9F48-42A3E7EAACB8}.Release|Win32.Build.0 = Release|Win32
 		{EFFE40D5-A62A-40A8-9F48-42A3E7EAACB8}.Release|x64.ActiveCfg = Release|Win32

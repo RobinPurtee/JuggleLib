@@ -4,7 +4,7 @@
 class Trajectory
 {
 public:
-    static const float GRAVITY; // in centimeters per second
+    static const double GRAVITY; // in centimeters per second
 
 
     Trajectory(void);

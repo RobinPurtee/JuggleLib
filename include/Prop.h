@@ -1,5 +1,5 @@
 #pragma once
-
+#include <tchar.h>
 #include <memory>
 struct Pass;
 class Hand;
@@ -27,7 +27,12 @@ public:
     /**
      *  Get the current state of the Prop
      */
-    Prop::State get_state();
+    Prop::State getState();
+
+    /** 
+     * Get the string of the current state name
+     */
+    const TCHAR* getStateName();
     
     /**
      * The current count away from the next hand
@@ -35,13 +40,13 @@ public:
      *         destination Hand, else the value is 0;
      * @remark The value is set by the Toss and decremented each time Count is called 
      */
-    int CurrentSwap();
+    int getCurrentSwap();
 
     /**
      * 
      */
 
-    virtual void Toss(Pass* pass);
+    virtual void Toss(const Pass* pass);
 
     virtual void Catch();
 

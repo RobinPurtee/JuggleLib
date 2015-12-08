@@ -8,8 +8,8 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace untitests
 {		
-	TEST_CLASS(UnitTest1)
-	{
+    TEST_CLASS(UnitTest1)
+    {
         static const int test_id = 0xdeadbeef;
 
         class PropResponder : public IPropResponder
@@ -21,6 +21,7 @@ namespace untitests
             , has_dropped(false)
             , id_error(false)
             {}
+
 
             void Tossed(int id_)
             {
@@ -48,32 +49,50 @@ namespace untitests
 
         };
 
-	public:
-		
-		TEST_METHOD(test_drop)
-		{
-            PropResponder responder;
-	        Prop prop(test_id, &responder);
+
+        void run_til_catch(Prop& prop, PropResponder& responder)
+        {
             Hand hand;
+            int siteswap(3);
+            Pass pass(siteswap, &hand);
 
-            Pass pass(3, &hand);
-
+            prop.Pickup();
             prop.Toss(&pass);
             Assert::IsFalse(responder.id_error);
             Assert::IsTrue(responder.has_tossed);
             prop.Tick();
-            Assert::IsFalse(responder.id_error);
-            Assert::IsFalse(responder.has_caught);
-            prop.Tick();
-            Assert::IsFalse(responder.id_error);
-            Assert::IsFalse(responder.has_caught);
-            prop.Tick();
-            Assert::IsFalse(responder.id_error);
-            Assert::IsTrue(responder.has_caught);
+            while(0 < siteswap)
+            {
+                Assert::IsFalse(responder.id_error);
+                Assert::IsFalse(responder.has_caught);
+                prop.Tick();
+                --siteswap;
+            }
+        }
+
+    public:
+        
+        TEST_METHOD(test_drop)
+        {
+            PropResponder responder;
+            Prop prop(test_id, &responder);
+
+            run_til_catch(prop, responder);
             prop.Tick();
             Assert::IsFalse(responder.id_error);
             Assert::IsTrue(responder.has_dropped);
-		}
+        }
 
-	};
+        TEST_METHOD(test_catch)
+        {
+            PropResponder responder;
+            Prop prop(test_id, &responder);
+
+            run_til_catch(prop, responder);
+            prop.Catch();
+            Assert::IsFalse(responder.id_error);
+            Assert::IsFalse(responder.has_dropped);
+        }
+
+    };
 }

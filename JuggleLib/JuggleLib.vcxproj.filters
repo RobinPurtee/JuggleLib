@@ -24,6 +24,7 @@
     <ClInclude Include="..\include\Hand.h" />
     <ClInclude Include="..\include\Pass.h" />
     <ClInclude Include="..\include\Prop.h" />
+    <ClInclude Include="common_state_machine.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

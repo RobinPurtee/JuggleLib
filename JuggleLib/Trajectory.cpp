@@ -3,7 +3,7 @@
 #include <cmath>
 
 
-const float Trajectory::GRAVITY = 980.665;
+const double Trajectory::GRAVITY = 980.665;
 
 
 

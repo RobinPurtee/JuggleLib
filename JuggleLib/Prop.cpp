@@ -1,9 +1,7 @@
 #include "pch.h"
 #include "Prop.h"
 #include "Pass.h"
-#include <boost/msm/front/euml/euml.hpp>
-#include <boost/msm/front/euml/state_grammar.hpp>
-#include <boost/msm/back/state_machine.hpp>
+#include "common_state_machine.h"
 #include <iostream>
 
 namespace msm = boost::msm;
@@ -11,19 +9,8 @@ using namespace boost::msm::front::euml;
 
 namespace StateMachine
 {
-
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(int, siteswap_)   
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Hand*, destinationHand_)
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(int, id_)
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(IPropResponder*, responder_)
 
-    BOOST_MSM_EUML_ATTRIBUTES((attributes_ << siteswap_ << destinationHand_ ), tossAttributes);
-    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(tossEvent, tossAttributes)
-
-    BOOST_MSM_EUML_EVENT(tickEvent)
-    BOOST_MSM_EUML_EVENT(catchEvent)
-    BOOST_MSM_EUML_EVENT(pickupEvent)
-    BOOST_MSM_EUML_EVENT(collisionEvent)
 
     BOOST_MSM_EUML_ACTION(catch_entry)
     {
@@ -48,10 +35,6 @@ namespace StateMachine
             }
         }
     };
-
-
-    BOOST_MSM_EUML_STATE((), Dwell)
-    BOOST_MSM_EUML_STATE((), Flight)
     BOOST_MSM_EUML_STATE((catch_entry), Catch)
     BOOST_MSM_EUML_STATE((dropped_entry), Dropped)
 
@@ -101,11 +84,11 @@ namespace StateMachine
     // the type for the state machine
 
     typedef msm::back::state_machine<prop_state_machine> Base;
-    const char* stateNames[] = {
-        "Dwell",
-        "Flight",
-        "Catch",
-        "Dropped",
+    const TCHAR* stateNames[] = {
+        TEXT("Dwell"),
+        TEXT("Flight"),
+        TEXT("Catch"),
+        TEXT("Dropped"),
     };
 
 }
@@ -129,9 +112,21 @@ Prop::~Prop(void)
 {
 }
 
-Prop::State Prop::get_state()
+Prop::State Prop::getState()
 {
     return static_cast<Prop::State>(*(stateMachine->current_state()));
+}
+
+
+const TCHAR* Prop::getStateName()
+{
+    return  StateMachine::stateNames[getState()];
+}
+
+
+int Prop::getCurrentSwap()
+{
+    return stateMachine->get_attribute(StateMachine::siteswap_);
 }
 
 
@@ -141,7 +136,7 @@ Prop::State Prop::get_state()
  * A sucessful toss can only be started if the prop has be caught and in the DWELL state
  */
 
-void Prop::Toss(Pass* pass)
+void Prop::Toss(const Pass* pass)
 {
     assert(nullptr != pass);
     stateMachine->process_event(StateMachine::tossEvent(pass->siteswap, pass->destination));

@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "Hand.h"
+#include "Pass.h"
+#include "Prop.h"
 
 
 Hand::Hand(void)
@@ -13,7 +15,7 @@ Hand::~Hand(void)
 }
 
 
-void Hand::AddProp(Prop* prop)
+void Hand::Pickup(Prop* prop)
 {
     if(nullptr != prop)
     {
@@ -21,23 +23,8 @@ void Hand::AddProp(Prop* prop)
     }
 }
 
-void Hand::AddPass(const Pass* pass)
-{
-    passList.push_back(*pass);
-}
 
-void Hand::AddPasses(PassList::iterator begin, PassList::iterator end)
-{
-    std::for_each(begin, end,[this](Pass pass){passList.push_back(pass);});
-}
-
-
-void Hand::InComming()
-{
-
-}
-
-void Hand::Toss()
+void Hand::Toss(const Pass& pass)
 {
     if(State::VACANT == state || propQue.empty())
     {
@@ -46,12 +33,7 @@ void Hand::Toss()
 
     Prop* prop = *propQue.begin();
     propQue.pop_front();
-    prop->Toss(&*currentPass);
-    ++currentPass;
-    if(passList.end() == currentPass)
-    {
-        currentPass = passList.begin();
-    }
+    prop->Toss(&pass);
 }
 
 void Hand::Catch(Prop* prop)
@@ -61,11 +43,6 @@ void Hand::Catch(Prop* prop)
     state = State::CATCH;
 }
 
-void Hand::Count()
+void Hand::Tick()
 {
-    ++currentPass;
-    if(nullptr != &*currentPass)
-    {
-        Toss();
-    }
 }

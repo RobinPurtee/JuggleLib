@@ -1,11 +1,9 @@
 #pragma once
 #include <list>
 #include <deque>
-#include "Pass.h"
+struct Pass;
 class Prop;
 
-
-typedef std::list<Pass> PassList; 
 
 class Hand
 {
@@ -16,20 +14,14 @@ public:
     Hand(void);
     ~Hand(void);
 
-    void AddProp(Prop* prop);
-
-    void AddPass(const Pass* pass);
-
-    void AddPasses(PassList::iterator begin, PassList::iterator end);
+    void Pickup(Prop* prop);
 
 
-    void InComming();
-
-    virtual void Toss();
+    virtual void Toss(const Pass& pass);
 
     virtual void Catch(Prop* prop);
 
-    virtual void Count();
+    virtual void Tick();
 private:
 
     Hand::State state;
@@ -37,8 +29,6 @@ private:
     // the props currently held by the hand
     std::deque<Prop*> propQue;
     // the list of passes to cycle through 
-    PassList passList;
-    PassList::iterator currentPass;
 
 };
 
