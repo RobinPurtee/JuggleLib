@@ -15,7 +15,6 @@
     <ClCompile Include="DropException.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="JuggleLib.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Trajectory.h" />
@@ -25,6 +24,7 @@
     <ClInclude Include="..\include\Pass.h" />
     <ClInclude Include="..\include\Prop.h" />
     <ClInclude Include="common_state_machine.h" />
+    <ClInclude Include="..\include\JuggleLib.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

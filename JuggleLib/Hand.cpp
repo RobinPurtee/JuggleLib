@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "JuggleLib.h"
 #include "Hand.h"
 #include "Pass.h"
 #include "Prop.h"

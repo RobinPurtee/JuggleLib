@@ -1,8 +1,8 @@
 #include "pch.h"
-#include "Prop.h"
-#include "Pass.h"
+#include "JuggleLib.h"
 #include "common_state_machine.h"
 #include <iostream>
+
 
 namespace msm = boost::msm;
 using namespace boost::msm::front::euml;
@@ -19,7 +19,7 @@ namespace StateMachine
         {
             if(nullptr != fsm.get_attribute(responder_))
             {
-                fsm.get_attribute(responder_)->Catch(fsm.get_attribute(id_), fsm.get_attribute(destinationHand_));
+                fsm.get_attribute(responder_)->Catch(fsm.get_attribute(id_));
             }
         }
     };
@@ -102,8 +102,8 @@ struct Prop::PropStateMachine : public StateMachine::Base
     }
 };
 
-Prop::Prop(int id, IPropResponder* responder)
-:   stateMachine(new Prop::PropStateMachine(id, responder) )
+Prop::Prop(int id)
+:   stateMachine(new Prop::PropStateMachine(id, this) )
 {
 }
 
@@ -129,6 +129,30 @@ int Prop::getCurrentSwap()
     return stateMachine->get_attribute(StateMachine::siteswap_);
 }
 
+void Prop::Tossed(int id)
+{
+    if (!tossed.empty())
+    {
+        tossed(id);
+    }
+}
+
+void Prop::Catch(int id)
+{
+    if (!ready_to_be_caught.empty())
+    {
+        ready_to_be_caught(id);
+    }
+    
+}
+
+void Prop::Dropped(int id)
+{
+    if (!dropped.empty())
+    {
+        dropped(id);
+    }
+}
 
 /**
  * Start accelorating the prop

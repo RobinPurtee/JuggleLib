@@ -5,6 +5,8 @@
 namespace msm = boost::msm;
 using namespace boost::msm::front::euml;
 
+class Hand;
+
 namespace StateMachine
 {
 

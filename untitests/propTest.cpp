@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
+#include "JuggleLib.h"
 #include "Prop.h"
 #include "Pass.h"
 #include "Hand.h"
@@ -12,7 +13,7 @@ namespace untitests
     {
         static const int test_id = 0xdeadbeef;
 
-        class PropResponder : public IPropResponder
+        class PropResponder 
         {
         public:
             PropResponder()
@@ -29,7 +30,7 @@ namespace untitests
                 id_error = id_ != test_id;
             }
 
-            void Catch(int id_, Hand* destination_)
+            void Catch(int id_)
             {
                 has_caught = true;
                 id_error = id_ != test_id;
@@ -75,7 +76,11 @@ namespace untitests
         TEST_METHOD(test_drop)
         {
             PropResponder responder;
-            Prop prop(test_id, &responder);
+            Prop prop(test_id);
+
+            prop.tossed.connect(std::bind(&PropResponder::Tossed, &responder, std::placeholders::_1));
+            prop.ready_to_be_caught.connect(std::bind(&PropResponder::Catch, &responder, std::placeholders::_1));
+            prop.dropped.connect(std::bind(&PropResponder::Dropped, &responder, std::placeholders::_1));
 
             run_til_catch(prop, responder);
             prop.Tick();
@@ -86,8 +91,10 @@ namespace untitests
         TEST_METHOD(test_catch)
         {
             PropResponder responder;
-            Prop prop(test_id, &responder);
-
+            Prop prop(test_id);
+            prop.tossed.connect(std::bind(&PropResponder::Tossed, &responder, std::placeholders::_1));
+            prop.ready_to_be_caught.connect(std::bind(&PropResponder::Catch, &responder, std::placeholders::_1));
+            prop.dropped.connect(std::bind(&PropResponder::Dropped, &responder, std::placeholders::_1));
             run_til_catch(prop, responder);
             prop.Catch();
             Assert::IsFalse(responder.id_error);
