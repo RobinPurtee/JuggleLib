@@ -1,7 +1,7 @@
 #pragma once
 #include <tchar.h>
 #include <memory>
-struct Pass;
+#include "Throw.h"
 class Hand;
 
 class IPropResponder
@@ -46,7 +46,7 @@ public:
      * 
      */
 
-    virtual void Toss(const Pass* pass);
+    virtual void Toss(const Throw* pass_);
 
     virtual void Catch();
 
@@ -60,16 +60,20 @@ public:
     IdPublisher ready_to_be_caught;
     IdPublisher dropped;
 
-    void Tossed(int id);
-    void Catch(int id);
-    void Dropped(int id);
+    void Tossed(int id_);
+    void Catch(int id_);
+    void Dropped(int id_);
 
 
 
+protected:
+    bool isIdValid(int id_);
+
+    Throw toss;
 private:
+    int id;
     struct PropStateMachine;
     std::shared_ptr<PropStateMachine> stateMachine;
-    int id;
 
 };
 

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "JuggleLib.h"
 #include "Hand.h"
-#include "Pass.h"
+#include "Throw.h"
 #include "Prop.h"
 
 
@@ -25,7 +25,7 @@ void Hand::Pickup(Prop* prop)
 }
 
 
-void Hand::Toss(const Pass& pass)
+void Hand::Toss(const Throw& toss)
 {
     if(State::VACANT == state || propQue.empty())
     {
@@ -34,7 +34,7 @@ void Hand::Toss(const Pass& pass)
 
     Prop* prop = *propQue.begin();
     propQue.pop_front();
-    prop->Toss(&pass);
+    prop->Toss(&toss);
 }
 
 void Hand::Catch(Prop* prop)

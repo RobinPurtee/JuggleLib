@@ -7,8 +7,9 @@
 namespace msm = boost::msm;
 using namespace boost::msm::front::euml;
 
-namespace StateMachine
+namespace PropStateMachineSpace
 {
+    using namespace StateMachine;
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(IPropResponder*, responder_)
 
 
@@ -17,9 +18,10 @@ namespace StateMachine
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            if(nullptr != fsm.get_attribute(responder_))
+            IPropResponder* responder(fsm.get_attribute(responder_));
+            if(nullptr !=  responder)
             {
-                fsm.get_attribute(responder_)->Catch(fsm.get_attribute(id_));
+                responder->Catch(fsm.get_attribute(id_));
             }
         }
     };
@@ -29,9 +31,10 @@ namespace StateMachine
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            if(nullptr != fsm.get_attribute(responder_))
+            IPropResponder* responder(fsm.get_attribute(responder_));
+            if(nullptr !=  responder)
             {
-                fsm.get_attribute(responder_)->Dropped(fsm.get_attribute(id_));
+                responder->Dropped(fsm.get_attribute(id_));
             }
         }
     };
@@ -43,12 +46,48 @@ namespace StateMachine
         template <class FSM,class EVT,class SourceState,class TargetState>
         void operator()(EVT const& evt ,FSM& fsm,SourceState& ,TargetState& )
         {
-            fsm.get_attribute(siteswap_) = evt.get_attribute(siteswap_);
-            fsm.get_attribute(destinationHand_) = evt.get_attribute(destinationHand_);
-            if(nullptr != fsm.get_attribute(responder_))
+            Throw* destinationPass(fsm.get_attribute(pass_));
+            Throw* sourcePass(evt.get_attribute(pass_));
+            if(nullptr != destinationPass && nullptr != sourcePass)
             {
-                fsm.get_attribute(responder_)->Tossed(fsm.get_attribute(id_));
+                *destinationPass = *sourcePass;
             }
+
+            IPropResponder* responder(fsm.get_attribute(responder_));
+            if(nullptr !=  responder)
+            {
+                responder->Tossed(fsm.get_attribute(id_));
+            }
+        }
+    };
+
+    BOOST_MSM_EUML_ACTION(tick_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            Throw* pass(fsm.get_attribute(pass_));
+            if(nullptr != pass && 0 < pass->siteswap)
+            {
+                --pass->siteswap;
+            }
+        }
+    };
+
+
+    BOOST_MSM_EUML_ACTION(tick_guard)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        bool operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            bool bRet(false);
+            Throw* pass(fsm.get_attribute(pass_));
+            if(nullptr != pass)
+            {
+                bRet =  0 == pass->siteswap;
+            }
+
+            return bRet;
         }
     };
 
@@ -56,10 +95,10 @@ namespace StateMachine
 
     BOOST_MSM_EUML_TRANSITION_TABLE(
         (
-            Dwell + tossEvent / toss_action == Flight,
-            Flight + tickEvent / if_then_((fsm_(siteswap_) > Int_<0>()), (--fsm_(siteswap_)))   ,
-            Flight + tickEvent [fsm_(siteswap_) == Int_<0>()]      == Catch,
-            Catch + catchEvent                       == Dwell,
+            Dwell + tossEvent / toss_action         == Flight,
+            Flight + tickEvent / tick_action,
+            Flight + tickEvent [tick_guard]         == Catch,
+            Catch + catchEvent                      == Dwell,
             Catch + tickEvent                       == Dropped,
             Dropped + pickupEvent                   == Dwell,
             Dwell + collisionEvent                  == Dropped,
@@ -76,7 +115,7 @@ namespace StateMachine
             init_ << Dropped,
             no_action,
             no_action,
-            attributes_<< id_ << responder_  << siteswap_ <<  destinationHand_ 
+            attributes_<< id_ << responder_  << pass_  
         ), 
         prop_state_machine
     )
@@ -93,17 +132,18 @@ namespace StateMachine
 
 }
 
-struct Prop::PropStateMachine : public StateMachine::Base
+struct Prop::PropStateMachine : public PropStateMachineSpace::Base
 {
     PropStateMachine(int id, IPropResponder* responder)
     {
         get_attribute(StateMachine::id_) = id;
-        get_attribute(StateMachine::responder_) = responder;
+        get_attribute(PropStateMachineSpace::responder_) = responder;
     }
 };
 
-Prop::Prop(int id)
-:   stateMachine(new Prop::PropStateMachine(id, this) )
+Prop::Prop(int id_)
+:   stateMachine(new Prop::PropStateMachine(id_, this) )
+,   id(id_)
 {
 }
 
@@ -120,37 +160,43 @@ Prop::State Prop::getState()
 
 const TCHAR* Prop::getStateName()
 {
-    return  StateMachine::stateNames[getState()];
+    return  PropStateMachineSpace::stateNames[getState()];
 }
 
 
 int Prop::getCurrentSwap()
 {
-    return stateMachine->get_attribute(StateMachine::siteswap_);
+    return toss.siteswap;
 }
 
-void Prop::Tossed(int id)
+
+bool Prop::isIdValid(int id_)
 {
-    if (!tossed.empty())
+    return id_ == id;
+}
+
+void Prop::Tossed(int id_)
+{
+    if (isIdValid(id_) && !tossed.empty())
     {
-        tossed(id);
+        tossed(id_);
     }
 }
 
-void Prop::Catch(int id)
+void Prop::Catch(int id_)
 {
-    if (!ready_to_be_caught.empty())
+    if (isIdValid(id_) && !ready_to_be_caught.empty())
     {
-        ready_to_be_caught(id);
+        ready_to_be_caught(id_);
     }
     
 }
 
-void Prop::Dropped(int id)
+void Prop::Dropped(int id_)
 {
-    if (!dropped.empty())
+    if (isIdValid(id_) && !dropped.empty())
     {
-        dropped(id);
+        dropped(id_);
     }
 }
 
@@ -160,10 +206,11 @@ void Prop::Dropped(int id)
  * A sucessful toss can only be started if the prop has be caught and in the DWELL state
  */
 
-void Prop::Toss(const Pass* pass)
+void Prop::Toss(const Throw* toss_)
 {
-    assert(nullptr != pass);
-    stateMachine->process_event(StateMachine::tossEvent(pass->siteswap, pass->destination));
+    assert(nullptr != toss_);
+    toss = *toss_;
+    stateMachine->process_event(StateMachine::tossEvent(&toss));
 }
 
 

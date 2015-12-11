@@ -2,7 +2,7 @@
 #include "CppUnitTest.h"
 #include "JuggleLib.h"
 #include "Prop.h"
-#include "Pass.h"
+#include "Throw.h"
 #include "Hand.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -55,7 +55,7 @@ namespace untitests
         {
             Hand hand;
             int siteswap(3);
-            Pass pass(siteswap, &hand);
+            Throw pass(siteswap, &hand);
 
             prop.Pickup();
             prop.Toss(&pass);

@@ -9,9 +9,11 @@ class Hand;
  * to provide the actions of the pattern
  *
  */
-struct Pass
+struct Throw
 {
-    Pass(int swap, Hand* dest) 
+    Throw() : siteswap(0), destination(nullptr) {}
+
+    Throw(int swap, Hand* dest) 
         :  siteswap(swap)
         ,  destination(dest)
     {}

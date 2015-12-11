@@ -6,15 +6,15 @@ namespace msm = boost::msm;
 using namespace boost::msm::front::euml;
 
 class Hand;
+struct Throw;
 
 namespace StateMachine
 {
 
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(int, siteswap_)   
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Hand*, destinationHand_)
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Throw*, pass_)
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(int, id_)
 
-    BOOST_MSM_EUML_ATTRIBUTES((attributes_ << siteswap_ << destinationHand_ ), tossAttributes);
+    BOOST_MSM_EUML_ATTRIBUTES((attributes_ << pass_ ), tossAttributes);
     BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(tossEvent, tossAttributes)
 
     BOOST_MSM_EUML_EVENT(tickEvent)

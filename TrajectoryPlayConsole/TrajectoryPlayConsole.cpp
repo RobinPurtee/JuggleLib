@@ -2,7 +2,7 @@
 //
 
 #include "stdafx.h"
-#include "..\JuggleLib\Trajectory.h"
+#include "Trajectory.h"
 
 
 int _tmain(int argc, _TCHAR* argv[])

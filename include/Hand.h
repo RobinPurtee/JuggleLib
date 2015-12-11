@@ -1,7 +1,7 @@
 #pragma once
 #include <list>
 #include <deque>
-struct Pass;
+struct Throw;
 class Prop;
 
 
@@ -17,7 +17,7 @@ public:
     void Pickup(Prop* prop);
 
 
-    virtual void Toss(const Pass& pass);
+    virtual void Toss(const Throw& pass);
 
     virtual void Catch(Prop* prop);
 

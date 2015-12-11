@@ -21,10 +21,10 @@
     <ClInclude Include="DropException.h" />
     <ClInclude Include="..\include\DropException.h" />
     <ClInclude Include="..\include\Hand.h" />
-    <ClInclude Include="..\include\Pass.h" />
     <ClInclude Include="..\include\Prop.h" />
     <ClInclude Include="common_state_machine.h" />
     <ClInclude Include="..\include\JuggleLib.h" />
+    <ClInclude Include="..\include\Throw.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
