@@ -10,6 +10,8 @@ public:
     virtual void Tossed(int id) = 0;
     virtual void Catch(int id) = 0;
     virtual void Dropped(int id) = 0;
+    //virtual void DecrementSiteswap(int id_) = 0;
+    //virtual bool IsInFlight() = 0;
 };
 
 /// This is a base class for an object being juggled
@@ -46,7 +48,7 @@ public:
      * 
      */
 
-    virtual void Toss(const Throw* pass_);
+    virtual void Toss(Throw* pass_);
 
     virtual void Catch();
 
@@ -63,14 +65,16 @@ public:
     void Tossed(int id_);
     void Catch(int id_);
     void Dropped(int id_);
-
-
+    //void DecrementSiteswap(int id_);
+    //bool IsInFlight();
 
 protected:
     bool isIdValid(int id_);
 
     Throw toss;
 private:
+
+
     int id;
     struct PropStateMachine;
     std::shared_ptr<PropStateMachine> stateMachine;

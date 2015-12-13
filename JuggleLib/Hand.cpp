@@ -25,7 +25,7 @@ void Hand::Pickup(Prop* prop)
 }
 
 
-void Hand::Toss(const Throw& toss)
+void Hand::Toss(Throw& toss)
 {
     if(State::VACANT == state || propQue.empty())
     {

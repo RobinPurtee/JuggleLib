@@ -46,11 +46,11 @@ namespace PropStateMachineSpace
         template <class FSM,class EVT,class SourceState,class TargetState>
         void operator()(EVT const& evt ,FSM& fsm,SourceState& ,TargetState& )
         {
-            Throw* destinationPass(fsm.get_attribute(pass_));
-            Throw* sourcePass(evt.get_attribute(pass_));
-            if(nullptr != destinationPass && nullptr != sourcePass)
+            Throw* destinationToss(fsm.get_attribute(toss_));
+            Throw* sourceToss(evt.get_attribute(toss_));
+            if(nullptr != destinationToss && nullptr != sourceToss)
             {
-                *destinationPass = *sourcePass;
+                *destinationToss = *sourceToss;
             }
 
             IPropResponder* responder(fsm.get_attribute(responder_));
@@ -66,10 +66,10 @@ namespace PropStateMachineSpace
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            Throw* pass(fsm.get_attribute(pass_));
-            if(nullptr != pass && 0 < pass->siteswap)
+            Throw* toss(fsm.get_attribute(toss_));
+            if(nullptr != toss && 0 < toss->siteswap)
             {
-                --pass->siteswap;
+                --toss->siteswap;
             }
         }
     };
@@ -81,10 +81,10 @@ namespace PropStateMachineSpace
         bool operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             bool bRet(false);
-            Throw* pass(fsm.get_attribute(pass_));
-            if(nullptr != pass)
+            Throw* toss(fsm.get_attribute(toss_));
+            if(nullptr != toss)
             {
-                bRet =  0 == pass->siteswap;
+                bRet =  0 == toss->siteswap;
             }
 
             return bRet;
@@ -115,7 +115,7 @@ namespace PropStateMachineSpace
             init_ << Dropped,
             no_action,
             no_action,
-            attributes_<< id_ << responder_  << pass_  
+            attributes_<< id_ << responder_ << toss_  
         ), 
         prop_state_machine
     )
@@ -145,6 +145,7 @@ Prop::Prop(int id_)
 :   stateMachine(new Prop::PropStateMachine(id_, this) )
 ,   id(id_)
 {
+    stateMachine->get_attribute(StateMachine::toss_) = &toss;
 }
 
 
@@ -185,9 +186,13 @@ void Prop::Tossed(int id_)
 
 void Prop::Catch(int id_)
 {
-    if (isIdValid(id_) && !ready_to_be_caught.empty())
+    if (isIdValid(id_))
     {
-        ready_to_be_caught(id_);
+        toss.clear();        
+        if( !ready_to_be_caught.empty())
+        {
+            ready_to_be_caught(id_);
+        }
     }
     
 }
@@ -206,11 +211,10 @@ void Prop::Dropped(int id_)
  * A sucessful toss can only be started if the prop has be caught and in the DWELL state
  */
 
-void Prop::Toss(const Throw* toss_)
+void Prop::Toss(Throw* toss_)
 {
     assert(nullptr != toss_);
-    toss = *toss_;
-    stateMachine->process_event(StateMachine::tossEvent(&toss));
+    stateMachine->process_event(StateMachine::tossEvent(toss_));
 }
 
 
