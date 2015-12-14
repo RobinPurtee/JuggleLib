@@ -1,5 +1,4 @@
 #pragma once
-#include <tchar.h>
 #include <memory>
 #include "Throw.h"
 class Hand;
@@ -18,7 +17,6 @@ public:
 class Prop : public IPropResponder
 {
 public:
-    enum State {DWELL = 0, FLIGHT = 1, CATCH = 2, TOSS = 3, DROPPED};
          
     Prop(int id_);
     virtual ~Prop(void);
@@ -26,10 +24,6 @@ public:
     //Properties
     int get_id()        {return id;}
 
-    /**
-     *  Get the current state of the Prop
-     */
-    Prop::State getState();
 
     /** 
      * Get the string of the current state name
@@ -70,6 +64,8 @@ public:
 
 protected:
     bool isIdValid(int id_);
+
+    int getState();
 
     Throw toss;
 private:

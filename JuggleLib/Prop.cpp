@@ -4,9 +4,6 @@
 #include <iostream>
 
 
-namespace msm = boost::msm;
-using namespace boost::msm::front::euml;
-
 namespace PropStateMachineSpace
 {
     using namespace StateMachine;
@@ -21,7 +18,7 @@ namespace PropStateMachineSpace
             IPropResponder* responder(fsm.get_attribute(responder_));
             if(nullptr !=  responder)
             {
-                responder->Catch(fsm.get_attribute(id_));
+                responder->Catch(fsm.get_attribute(Aid));
             }
         }
     };
@@ -34,20 +31,23 @@ namespace PropStateMachineSpace
             IPropResponder* responder(fsm.get_attribute(responder_));
             if(nullptr !=  responder)
             {
-                responder->Dropped(fsm.get_attribute(id_));
+                responder->Dropped(fsm.get_attribute(Aid));
             }
         }
     };
-    BOOST_MSM_EUML_STATE((catch_entry), Catch)
-    BOOST_MSM_EUML_STATE((dropped_entry), Dropped)
+
+    BOOST_MSM_EUML_STATE((catch_entry), CATCH)
+    BOOST_MSM_EUML_STATE((dropped_entry), DROPPED)
+    BOOST_MSM_EUML_STATE((), FLIGHT)
+
 
     BOOST_MSM_EUML_ACTION(toss_action)
     {
         template <class FSM,class EVT,class SourceState,class TargetState>
         void operator()(EVT const& evt ,FSM& fsm,SourceState& ,TargetState& )
         {
-            Throw* destinationToss(fsm.get_attribute(toss_));
-            Throw* sourceToss(evt.get_attribute(toss_));
+            Throw* destinationToss(fsm.get_attribute(Atoss));
+            Throw* sourceToss(evt.get_attribute(Atoss));
             if(nullptr != destinationToss && nullptr != sourceToss)
             {
                 *destinationToss = *sourceToss;
@@ -56,7 +56,7 @@ namespace PropStateMachineSpace
             IPropResponder* responder(fsm.get_attribute(responder_));
             if(nullptr !=  responder)
             {
-                responder->Tossed(fsm.get_attribute(id_));
+                responder->Tossed(fsm.get_attribute(Aid));
             }
         }
     };
@@ -66,7 +66,7 @@ namespace PropStateMachineSpace
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            Throw* toss(fsm.get_attribute(toss_));
+            Throw* toss(fsm.get_attribute(Atoss));
             if(nullptr != toss && 0 < toss->siteswap)
             {
                 --toss->siteswap;
@@ -81,7 +81,7 @@ namespace PropStateMachineSpace
         bool operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             bool bRet(false);
-            Throw* toss(fsm.get_attribute(toss_));
+            Throw* toss(fsm.get_attribute(Atoss));
             if(nullptr != toss)
             {
                 bRet =  0 == toss->siteswap;
@@ -95,15 +95,15 @@ namespace PropStateMachineSpace
 
     BOOST_MSM_EUML_TRANSITION_TABLE(
         (
-            Dwell + tossEvent / toss_action         == Flight,
-            Flight + tickEvent / tick_action,
-            Flight + tickEvent [tick_guard]         == Catch,
-            Catch + catchEvent                      == Dwell,
-            Catch + tickEvent                       == Dropped,
-            Dropped + pickupEvent                   == Dwell,
-            Dwell + collisionEvent                  == Dropped,
-            Flight + collisionEvent                 == Dropped,
-            Catch + collisionEvent                  == Dropped
+            DWELL + tossEvent / toss_action         == FLIGHT,
+            FLIGHT + tickEvent / tick_action,
+            FLIGHT + tickEvent [tick_guard]         == CATCH,
+            CATCH + catchEvent                      == DWELL,
+            CATCH + tickEvent                       == DROPPED,
+            DROPPED + pickupEvent                   == DWELL,
+            DWELL + collisionEvent                  == DROPPED,
+            FLIGHT + collisionEvent                 == DROPPED,
+            CATCH + collisionEvent                  == DROPPED
         )
         , prop_transition_table
     )
@@ -112,10 +112,10 @@ namespace PropStateMachineSpace
     ( 
         (
             prop_transition_table, 
-            init_ << Dropped,
+            init_ << DROPPED,
             no_action,
             no_action,
-            attributes_<< id_ << responder_ << toss_  
+            attributes_<< Aid << responder_ << Atoss  
         ), 
         prop_state_machine
     )
@@ -136,7 +136,7 @@ struct Prop::PropStateMachine : public PropStateMachineSpace::Base
 {
     PropStateMachine(int id, IPropResponder* responder)
     {
-        get_attribute(StateMachine::id_) = id;
+        get_attribute(StateMachine::Aid) = id;
         get_attribute(PropStateMachineSpace::responder_) = responder;
     }
 };
@@ -145,7 +145,7 @@ Prop::Prop(int id_)
 :   stateMachine(new Prop::PropStateMachine(id_, this) )
 ,   id(id_)
 {
-    stateMachine->get_attribute(StateMachine::toss_) = &toss;
+    stateMachine->get_attribute(StateMachine::Atoss) = &toss;
 }
 
 
@@ -153,9 +153,9 @@ Prop::~Prop(void)
 {
 }
 
-Prop::State Prop::getState()
+int Prop::getState()
 {
-    return static_cast<Prop::State>(*(stateMachine->current_state()));
+    return (*(stateMachine->current_state()));
 }
 
 

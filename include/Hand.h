@@ -9,26 +9,21 @@ class Hand
 {
 public:
 
-    enum State { VACANT, CATCH, DWELL, TOSS };
+    //enum State { VACANT, CATCH, DWELL, TOSS };
 
-    Hand(void);
+    Hand(int id_);
     ~Hand(void);
 
-    void Pickup(Prop* prop);
+    void Pickup(Prop* prop_);
 
+    virtual void Toss(Throw* toss_);
 
-    virtual void Toss(Throw& pass);
+    virtual void Catch(Prop* prop_);
 
-    virtual void Catch(Prop* prop);
-
-    virtual void Tick();
 private:
 
-    Hand::State state;
-
-    // the props currently held by the hand
-    std::deque<Prop*> propQue;
-    // the list of passes to cycle through 
+    struct HandStateMachine;
+    std::shared_ptr<HandStateMachine> stateMachine;
 
 };
 

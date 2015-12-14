@@ -9,7 +9,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace untitests
 {		
-    TEST_CLASS(UnitTest1)
+    TEST_CLASS(PropTests)
     {
         static const int test_id = 0xdeadbeef;
 
@@ -51,9 +51,17 @@ namespace untitests
         };
 
 
+        void connect_prop_responder(Prop& prop_, PropResponder* responder_)
+        {
+            prop_.tossed.connect(std::bind(&PropResponder::Tossed, responder_, std::placeholders::_1));
+            prop_.ready_to_be_caught.connect(std::bind(&PropResponder::Catch, responder_, std::placeholders::_1));
+            prop_.dropped.connect(std::bind(&PropResponder::Dropped, responder_, std::placeholders::_1));
+        }
+
+
         void run_til_catch(Prop& prop, PropResponder& responder)
         {
-            Hand hand;
+            Hand hand(0);
             int siteswap(3);
             Throw pass(siteswap, &hand);
 
@@ -71,6 +79,9 @@ namespace untitests
             }
         }
 
+
+
+
     public:
         
         TEST_METHOD(test_drop)
@@ -78,10 +89,7 @@ namespace untitests
             PropResponder responder;
             Prop prop(test_id);
 
-            prop.tossed.connect(std::bind(&PropResponder::Tossed, &responder, std::placeholders::_1));
-            prop.ready_to_be_caught.connect(std::bind(&PropResponder::Catch, &responder, std::placeholders::_1));
-            prop.dropped.connect(std::bind(&PropResponder::Dropped, &responder, std::placeholders::_1));
-
+            connect_prop_responder(prop, &responder);
             run_til_catch(prop, responder);
             prop.Tick();
             Assert::IsFalse(responder.id_error);
@@ -92,14 +100,25 @@ namespace untitests
         {
             PropResponder responder;
             Prop prop(test_id);
-            prop.tossed.connect(std::bind(&PropResponder::Tossed, &responder, std::placeholders::_1));
-            prop.ready_to_be_caught.connect(std::bind(&PropResponder::Catch, &responder, std::placeholders::_1));
-            prop.dropped.connect(std::bind(&PropResponder::Dropped, &responder, std::placeholders::_1));
+
+            connect_prop_responder(prop, &responder);
             run_til_catch(prop, responder);
             prop.Catch();
             Assert::IsFalse(responder.id_error);
             Assert::IsFalse(responder.has_dropped);
         }
+
+        TEST_METHOD(invalid_transition_test)
+        {
+            PropResponder responder;
+            Prop prop(test_id);
+
+            connect_prop_responder(prop, &responder);
+
+            prop.Catch();
+
+        }
+        
 
     };
 }
