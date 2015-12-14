@@ -6,29 +6,99 @@
 #include "common_state_machine.h"
 
 
-namespace HandStateMachineSpace
+namespace 
 {
     using namespace StateMachine;
 
-
-    BOOST_MSM_EUML_STATE((), TOSS)
-    BOOST_MSM_EUML_STATE((), CATCH)
-    BOOST_MSM_EUML_STATE((), VACANT)
-
-
-    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(releaseEvent, propAttributes)
-    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(pickupEvent, propAttributes)
-    BOOST_MSM_EUML_EVENT(caughtEvent)
+    BOOST_MSM_EUML_FLAG(vacant_flag_);
 
     BOOST_MSM_EUML_ACTION(toss_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
+            Throw* evtToss(evt.get_attribute(Atoss));
+            if(nullptr != evtToss)
+            {
+                target.get_attribute(Atoss) = evtToss;
+            }
         }
     };
 
 
+    BOOST_MSM_EUML_ACTION(release_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            Throw* toss = source.get_attribute(Atoss);
+            Prop* prop = fsm.getPropsHeld().pop_front();
+            if(nullptr != toss && nullptr != prop)
+            {
+                prop->Toss(toss);
+            }
+        }
+    };
+
+    BOOST_MSM_EUML_STATE(
+        (
+            no_action,
+            no_action,
+            attributes_ << Atoss,
+            configure_ << no_configure_
+        ), 
+        TOSS)
+
+
+    BOOST_MSM_EUML_ACTION(catch_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            Prop* prop(evt.get_attribute(Aprop));
+            if(nullptr != prop)
+            {
+                target.get_attribute(Aprop) = prop;
+            }
+        }
+    };
+
+    BOOST_MSM_EUML_ACTION(catch_exit_action)
+    {
+        template <class Event, class FSM, class STATE>
+        void operator()(Event const& evt, FSM& fsm, STATE& state)
+        {
+            Prop* prop(state.get_attribute(Aprop));
+            if(nullptr != prop)
+            {
+                fsm->getPropsHeld().push_back(prop);
+            }
+        }
+    };
+
+    BOOST_MSM_EUML_STATE(
+        (
+            no_action,
+            catch_exit_action,
+            attributes_ << Aprop,
+            configure_ << no_configure_
+        ), CATCH)
+
+
+    BOOST_MSM_EUML_STATE(
+        (
+            no_action,
+            no_action,
+            attributes_ << no_attributes_,
+            configure_ << vacant_flag_
+        ), VACANT)
+
+
+    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(releaseEvent, propAttributes)
+    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(pickupEvent, propAttributes)
+    BOOST_MSM_EUML_EVENT(caughtEvent)
+
+ 
     BOOST_MSM_EUML_ACTION(pickup_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
@@ -37,7 +107,7 @@ namespace HandStateMachineSpace
             Prop* prop = evt.get_attribute(Aprop);
             if(nullptr != prop)
             {
-                fsm.get_propsHeld().push_back(prop);
+                fsm.getPropsHeld().push_back(prop);
             }
         }
     };
@@ -50,7 +120,7 @@ namespace HandStateMachineSpace
         template <class FSM, class EVT, class SourceState, class TargetState>
         bool operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            return fsm.get_propsHeld().empty();
+            return fsm.getPropsHeld().empty();
         }
     };
 
@@ -69,8 +139,9 @@ namespace HandStateMachineSpace
             (
                 (
                     DWELL + tossEvent / toss_action         == TOSS,
+                    TOSS + releaseEvent / release_action,                     
                     TOSS + releaseEvent [vacant_guard]      == VACANT,
-                    VACANT + catchEvent / pickup_action     == CATCH,
+                    VACANT + catchEvent / catch_action      == CATCH,
                     CATCH + caughtEvent                     == DWELL,
                     VACANT + pickupEvent / pickup_action    == DWELL,
                     DWELL + pickupEvent / pickup_action 
@@ -78,7 +149,7 @@ namespace HandStateMachineSpace
                 , transition_table
             )
 
-            std::deque<Prop*>& get_propsHeld() 
+            std::deque<Prop*>& getPropsHeld() 
             {   
                 return propsHeld; 
             } 
@@ -93,7 +164,6 @@ namespace HandStateMachineSpace
 
         private:
          std::deque<Prop*> propsHeld;
-         std::list<Prop*> incommingProps;
          int id;
     };
 
@@ -106,17 +176,17 @@ namespace HandStateMachineSpace
 
     const TCHAR* stateNames[] = {
         TEXT("Dwell"),
-        TEXT("Flight"),
-        TEXT("Catch"),
+        TEXT("Toss"),
         TEXT("Vacant"),
+        TEXT("Catch"),
     };
 
 }
 
-struct Hand::HandStateMachine : public HandStateMachineSpace::Base
+struct Hand::HandStateMachine : public Base
 {
     HandStateMachine(int id_)
-        : HandStateMachineSpace::Base(id_)
+        : Base(id_)
     {
     }
 };

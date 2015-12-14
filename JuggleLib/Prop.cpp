@@ -4,12 +4,18 @@
 #include <iostream>
 
 
-namespace PropStateMachineSpace
+namespace 
 {
     using namespace StateMachine;
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(IPropResponder*, responder_)
 
+    BOOST_MSM_EUML_FLAG(isDroppedFlag_);
+    BOOST_MSM_EUML_FLAG(isInFlightFlag_);
 
+
+    /* 
+     *  The catch state and support methods
+     */
     BOOST_MSM_EUML_ACTION(catch_entry)
     {
         template <class Event, class FSM, class STATE>
@@ -22,6 +28,12 @@ namespace PropStateMachineSpace
             }
         }
     };
+
+    BOOST_MSM_EUML_STATE((catch_entry), CATCH)
+
+    /* 
+     *  The dropped state and support methods
+     */
 
     BOOST_MSM_EUML_ACTION(dropped_entry)
     {
@@ -36,9 +48,52 @@ namespace PropStateMachineSpace
         }
     };
 
-    BOOST_MSM_EUML_STATE((catch_entry), CATCH)
-    BOOST_MSM_EUML_STATE((dropped_entry), DROPPED)
-    BOOST_MSM_EUML_STATE((), FLIGHT)
+    BOOST_MSM_EUML_STATE(
+        (
+            dropped_entry,
+            no_action,
+            attributes_ << no_attributes_,
+            configure_ << isDroppedFlag_
+        ), 
+        DROPPED
+    )
+ 
+    /* 
+     *  The flight state and support methods
+     */
+
+
+    BOOST_MSM_EUML_ACTION(tick_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            Throw* toss(fsm.get_attribute(Atoss));
+            if(nullptr != toss)
+            {
+                if(0 < toss->siteswap)
+                {
+                    --toss->siteswap;
+                }
+                if(0 == toss->siteswap)
+                {
+                    fsm.process_event(catchEvent);
+                }
+            }
+            
+        }
+    };
+
+    BOOST_MSM_EUML_STATE(
+        (
+            no_action,
+            no_action,
+            attributes_ << no_attributes_,
+            configure_ << isInFlightFlag_
+        ), 
+        FLIGHT
+    )
+
 
 
     BOOST_MSM_EUML_ACTION(toss_action)
@@ -61,19 +116,6 @@ namespace PropStateMachineSpace
         }
     };
 
-    BOOST_MSM_EUML_ACTION(tick_action)
-    {
-        template <class FSM, class EVT, class SourceState, class TargetState>
-        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
-        {
-            Throw* toss(fsm.get_attribute(Atoss));
-            if(nullptr != toss && 0 < toss->siteswap)
-            {
-                --toss->siteswap;
-            }
-        }
-    };
-
 
     BOOST_MSM_EUML_ACTION(tick_guard)
     {
@@ -86,7 +128,6 @@ namespace PropStateMachineSpace
             {
                 bRet =  0 == toss->siteswap;
             }
-
             return bRet;
         }
     };
@@ -97,17 +138,34 @@ namespace PropStateMachineSpace
         (
             DWELL + tossEvent / toss_action         == FLIGHT,
             FLIGHT + tickEvent / tick_action,
-            FLIGHT + tickEvent [tick_guard]         == CATCH,
+            FLIGHT + catchEvent [tick_guard]        == CATCH,
             CATCH + catchEvent                      == DWELL,
             CATCH + tickEvent                       == DROPPED,
             DROPPED + pickupEvent                   == DWELL,
             DWELL + collisionEvent                  == DROPPED,
             FLIGHT + collisionEvent                 == DROPPED,
-            CATCH + collisionEvent                  == DROPPED
+            CATCH + collisionEvent                  == DROPPED,
+            DROPPED + collisionEvent
         )
         , prop_transition_table
     )
 
+    /**
+     * Invalid transistion handler
+     * in this case could a collisionEvent to force the Dropped state
+     */
+    BOOST_MSM_EUML_ACTION(invalid_state_transistion)
+    {
+        template <class FSM,class Event>
+        void operator()(Event const& e,FSM& fsm,int state)
+        {
+            fsm.process_event(collisionEvent);
+        }
+    };
+
+    /**
+     * The declaration of the actual state machine type
+     */
     BOOST_MSM_EUML_DECLARE_STATE_MACHINE
     ( 
         (
@@ -115,7 +173,9 @@ namespace PropStateMachineSpace
             init_ << DROPPED,
             no_action,
             no_action,
-            attributes_<< Aid << responder_ << Atoss  
+            attributes_<< Aid << responder_ << Atoss,
+            configure_ << no_configure_,
+            invalid_state_transistion
         ), 
         prop_state_machine
     )
@@ -132,20 +192,20 @@ namespace PropStateMachineSpace
 
 }
 
-struct Prop::PropStateMachine : public PropStateMachineSpace::Base
+struct Prop::PropStateMachine : public Base
 {
     PropStateMachine(int id, IPropResponder* responder)
     {
         get_attribute(StateMachine::Aid) = id;
-        get_attribute(PropStateMachineSpace::responder_) = responder;
+        get_attribute(responder_) = responder;
     }
 };
 
-Prop::Prop(int id_)
-:   stateMachine(new Prop::PropStateMachine(id_, this) )
-,   id(id_)
+Prop::Prop(int id)
+:   stateMachine_(new Prop::PropStateMachine(id, this) )
+,   id_(id)
 {
-    stateMachine->get_attribute(StateMachine::Atoss) = &toss;
+    stateMachine_->get_attribute(StateMachine::Atoss) = &toss_;
 }
 
 
@@ -155,53 +215,64 @@ Prop::~Prop(void)
 
 int Prop::getState()
 {
-    return (*(stateMachine->current_state()));
+    return (*(stateMachine_->current_state()));
 }
 
 
 const TCHAR* Prop::getStateName()
 {
-    return  PropStateMachineSpace::stateNames[getState()];
+    return  stateNames[getState()];
 }
 
+bool Prop::isDropped()
+{
+    return stateMachine_->is_flag_active<isDroppedFlag__helper>();
+}
+
+
+bool Prop::isInFlight()
+{
+    return stateMachine_->is_flag_active<isInFlightFlag__helper>();
+}
+        
 
 int Prop::getCurrentSwap()
 {
-    return toss.siteswap;
+    return toss_.siteswap;
 }
 
 
-bool Prop::isIdValid(int id_)
+bool Prop::isIdValid(int id)
 {
-    return id_ == id;
+    return id == id_;
 }
 
-void Prop::Tossed(int id_)
+void Prop::Tossed(int id)
 {
-    if (isIdValid(id_) && !tossed.empty())
+    if (isIdValid(id) && !tossed.empty())
     {
-        tossed(id_);
+        tossed(id);
     }
 }
 
-void Prop::Catch(int id_)
+void Prop::Catch(int id)
 {
-    if (isIdValid(id_))
+    if (isIdValid(id))
     {
-        toss.clear();        
+        toss_.clear();        
         if( !ready_to_be_caught.empty())
         {
-            ready_to_be_caught(id_);
+            ready_to_be_caught(id);
         }
     }
     
 }
 
-void Prop::Dropped(int id_)
+void Prop::Dropped(int id)
 {
-    if (isIdValid(id_) && !dropped.empty())
+    if (isIdValid(id) && !dropped.empty())
     {
-        dropped(id_);
+        dropped(id);
     }
 }
 
@@ -211,29 +282,29 @@ void Prop::Dropped(int id_)
  * A sucessful toss can only be started if the prop has be caught and in the DWELL state
  */
 
-void Prop::Toss(Throw* toss_)
+void Prop::Toss(Throw* toss)
 {
-    assert(nullptr != toss_);
-    stateMachine->process_event(StateMachine::tossEvent(toss_));
+    assert(nullptr != toss);
+    stateMachine_->process_event(StateMachine::tossEvent(toss));
 }
 
 
 void Prop::Catch()
 {
-    stateMachine->process_event(StateMachine::catchEvent);
+    stateMachine_->process_event(StateMachine::catchEvent);
 }
 
 void Prop::Collision()
 {
-    stateMachine->process_event(StateMachine::collisionEvent);
+    stateMachine_->process_event(StateMachine::collisionEvent);
 }
 
 void Prop::Pickup()
 {
-    stateMachine->process_event(StateMachine::pickupEvent);
+    stateMachine_->process_event(StateMachine::pickupEvent);
 }
 
 void Prop::Tick()
 {
-    stateMachine->process_event(StateMachine::tickEvent);
+    stateMachine_->process_event(StateMachine::tickEvent);
 }

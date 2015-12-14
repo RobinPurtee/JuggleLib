@@ -18,11 +18,11 @@ class Prop : public IPropResponder
 {
 public:
          
-    Prop(int id_);
+    Prop(int id);
     virtual ~Prop(void);
 
     //Properties
-    int get_id()        {return id;}
+    int get_id()        {return id_;}
 
 
     /** 
@@ -41,8 +41,10 @@ public:
     /**
      * 
      */
+    bool isDropped();
+    bool isInFlight();
 
-    virtual void Toss(Throw* pass_);
+    virtual void Toss(Throw* pass);
 
     virtual void Catch();
 
@@ -56,24 +58,24 @@ public:
     IdPublisher ready_to_be_caught;
     IdPublisher dropped;
 
-    void Tossed(int id_);
-    void Catch(int id_);
-    void Dropped(int id_);
-    //void DecrementSiteswap(int id_);
+    void Tossed(int id);
+    void Catch(int id);
+    void Dropped(int id);
+    //void DecrementSiteswap(int id);
     //bool IsInFlight();
 
 protected:
-    bool isIdValid(int id_);
+    bool isIdValid(int id);
 
     int getState();
 
-    Throw toss;
+    Throw toss_;
 private:
 
 
-    int id;
+    int id_;
     struct PropStateMachine;
-    std::shared_ptr<PropStateMachine> stateMachine;
+    std::shared_ptr<PropStateMachine> stateMachine_;
 
 };
 

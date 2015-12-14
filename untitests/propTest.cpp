@@ -69,17 +69,14 @@ namespace untitests
             prop.Toss(&pass);
             Assert::IsFalse(responder.id_error);
             Assert::IsTrue(responder.has_tossed);
-            prop.Tick();
             while(0 < siteswap)
             {
                 Assert::IsFalse(responder.id_error);
-                Assert::IsFalse(responder.has_caught);
+                Assert::IsFalse(responder.has_caught, _T("The Prop trigger the catch notification early"));
                 prop.Tick();
                 --siteswap;
             }
         }
-
-
 
 
     public:
@@ -114,11 +111,78 @@ namespace untitests
             Prop prop(test_id);
 
             connect_prop_responder(prop, &responder);
-
+  
+            Assert::IsTrue(prop.isDropped());
             prop.Catch();
-
+            Assert::IsTrue(prop.isDropped());
         }
-        
+
+        TEST_METHOD(dropped_once_caught_test)
+        {
+            PropResponder responder;
+            Prop prop(test_id);
+            Hand hand(0);
+            int siteswap(1);
+            Throw pass(siteswap, &hand);
+
+            connect_prop_responder(prop, &responder);
+
+            prop.Pickup();
+            prop.Toss(&pass);
+            Assert::IsTrue(responder.has_tossed, _T("Prop did not trick the tossed notification"));
+            Assert::IsTrue(prop.isInFlight(), _T("Prop is not in Flight"));
+            prop.Tick();
+            Assert::IsFalse(prop.isInFlight(), _T("Prop is still Flight when it should be in Catch"));
+            Assert::IsTrue(responder.has_caught, _T("Prop has not notified of coming catch"));
+            prop.Catch();
+            Assert::IsTrue(responder.has_caught, _T("The Catch did not trigger the catch notification"));
+            Assert::IsFalse(prop.isDropped(), _T("Prop has dropped during catch"));
+            Assert::IsFalse(prop.isInFlight(), _T("Prop thinks it is still in flight when should be Dwell"));
+            prop.Collision();
+            Assert::IsTrue(responder.has_dropped, _T("Prop has not sent the drop notification"));
+            Assert::IsTrue(prop.isDropped(), _T("The Prop was not dropped by the collision"));
+        }
+
+        TEST_METHOD(dropped_on_toss_test)
+        {
+            PropResponder responder;
+            Prop prop(test_id);
+            Hand hand(0);
+            int siteswap(1);
+            Throw pass(siteswap, &hand);
+
+            connect_prop_responder(prop, &responder);
+
+            prop.Pickup();
+            prop.Toss(&pass);
+            Assert::IsTrue(responder.has_tossed, _T("Prop did not trick the tossed notification"));
+            Assert::IsTrue(prop.isInFlight(), _T("Prop is not in Flight"));
+            prop.Collision();
+            Assert::IsTrue(responder.has_dropped, _T("Prop has not sent the drop notification"));
+            Assert::IsTrue(prop.isDropped(), _T("The Prop was not dropped by the collision"));
+        }
+
+        TEST_METHOD(missed_catch_test)
+        {
+            PropResponder responder;
+            Prop prop(test_id);
+            Hand hand(0);
+            int siteswap(1);
+            Throw pass(siteswap, &hand);
+
+            connect_prop_responder(prop, &responder);
+
+            prop.Pickup();
+            prop.Toss(&pass);
+            Assert::IsTrue(responder.has_tossed, _T("Prop did not trick the tossed notification"));
+            Assert::IsTrue(prop.isInFlight(), _T("Prop is not in Flight"));
+            prop.Tick();
+            Assert::IsFalse(prop.isInFlight(), _T("Prop is still Flight when it should be in Catch"));
+            Assert::IsTrue(responder.has_caught, _T("Prop has not notified of coming catch"));
+            prop.Tick();
+            Assert::IsTrue(responder.has_dropped, _T("Prop has not sent the drop notification"));
+            Assert::IsTrue(prop.isDropped(), _T("The Prop was not dropped by missing the catch"));
+        }
 
     };
 }
