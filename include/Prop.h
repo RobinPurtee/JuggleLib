@@ -54,23 +54,34 @@ public:
 
     virtual void Tick();
 
-    IdPublisher tossed;
-    IdPublisher ready_to_be_caught;
-    IdPublisher dropped;
+    
+    void ConnectToToss(IdSlot slot);
+    void DisconnectFromToss(IdSlot slot);
 
+    void ConnectToDrop(IdSlot slot);
+    void DisconnectFromDrop(IdSlot slot);
+
+    void ConnectToCatch(PropSlot slot);
+    void DisconnectFromCatch(PropSlot slot);
+
+    void ConnectToAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot);
+    void DisonnectFromAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot);
+
+protected:
     void Tossed(int id);
     void Catch(int id);
     void Dropped(int id);
     //void DecrementSiteswap(int id);
-    //bool IsInFlight();
 
-protected:
     bool isIdValid(int id);
 
     int getState();
 
     Throw toss_;
 private:
+    IdPublisher tossed_;
+    PropPublisher ready_to_be_caught_;
+    IdPublisher dropped_;
 
 
     int id_;

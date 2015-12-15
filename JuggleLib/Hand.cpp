@@ -71,7 +71,7 @@ namespace
             Prop* prop(state.get_attribute(Aprop));
             if(nullptr != prop)
             {
-                fsm->getPropsHeld().push_back(prop);
+                fsm->getPropsHeld().push_front(prop);
             }
         }
     };

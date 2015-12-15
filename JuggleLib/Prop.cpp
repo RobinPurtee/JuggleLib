@@ -7,7 +7,7 @@
 namespace 
 {
     using namespace StateMachine;
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(IPropResponder*, responder_)
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Prop*, responder_);
 
     BOOST_MSM_EUML_FLAG(isDroppedFlag_);
     BOOST_MSM_EUML_FLAG(isInFlightFlag_);
@@ -194,7 +194,7 @@ namespace
 
 struct Prop::PropStateMachine : public Base
 {
-    PropStateMachine(int id, IPropResponder* responder)
+    PropStateMachine(int id, Prop* responder)
     {
         get_attribute(StateMachine::Aid) = id;
         get_attribute(responder_) = responder;
@@ -241,6 +241,53 @@ int Prop::getCurrentSwap()
     return toss_.siteswap;
 }
 
+void Prop::ConnectToToss(IdSlot slot)
+{
+    tossed_.connect(slot);
+}
+
+void Prop::DisconnectFromToss(IdSlot slot)
+{
+    tossed_.disconnect(slot);
+}
+
+
+
+void Prop::ConnectToDrop(IdSlot slot)
+{
+    dropped_.connect(slot);
+}
+
+void Prop::DisconnectFromDrop(IdSlot slot)
+{
+    dropped_.disconnect(slot);
+}
+
+
+void Prop::ConnectToCatch(PropSlot slot)
+{
+    ready_to_be_caught_.connect(slot);
+}
+
+void Prop::DisconnectFromCatch(PropSlot slot)
+{
+    ready_to_be_caught_.disconnect(slot);
+}
+
+void Prop::ConnectToAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot)
+{
+    ConnectToToss(tossSlot);
+    ConnectToDrop(dropSlot);
+    ConnectToCatch(propSlot);
+}
+
+void Prop::DisonnectFromAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot)
+{
+    DisconnectFromToss(tossSlot);
+    DisconnectFromDrop(dropSlot);
+    DisconnectFromCatch(propSlot);
+}
+
 
 bool Prop::isIdValid(int id)
 {
@@ -249,9 +296,9 @@ bool Prop::isIdValid(int id)
 
 void Prop::Tossed(int id)
 {
-    if (isIdValid(id) && !tossed.empty())
+    if (isIdValid(id) && !tossed_.empty())
     {
-        tossed(id);
+        tossed_(id);
     }
 }
 
@@ -260,9 +307,9 @@ void Prop::Catch(int id)
     if (isIdValid(id))
     {
         toss_.clear();        
-        if( !ready_to_be_caught.empty())
+        if( !ready_to_be_caught_.empty())
         {
-            ready_to_be_caught(id);
+            ready_to_be_caught_(this);
         }
     }
     
@@ -270,9 +317,9 @@ void Prop::Catch(int id)
 
 void Prop::Dropped(int id)
 {
-    if (isIdValid(id) && !dropped.empty())
+    if (isIdValid(id) && !dropped_.empty())
     {
-        dropped(id);
+        dropped_(id);
     }
 }
 

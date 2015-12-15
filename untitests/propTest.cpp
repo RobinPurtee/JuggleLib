@@ -30,10 +30,10 @@ namespace untitests
                 id_error = id_ != test_id;
             }
 
-            void Catch(int id_)
+            void Catch(Prop* prop)
             {
                 has_caught = true;
-                id_error = id_ != test_id;
+                id_error = nullptr == prop;
             }
 
             void Dropped(int id_)
@@ -53,9 +53,9 @@ namespace untitests
 
         void connect_prop_responder(Prop& prop_, PropResponder* responder_)
         {
-            prop_.tossed.connect(std::bind(&PropResponder::Tossed, responder_, std::placeholders::_1));
-            prop_.ready_to_be_caught.connect(std::bind(&PropResponder::Catch, responder_, std::placeholders::_1));
-            prop_.dropped.connect(std::bind(&PropResponder::Dropped, responder_, std::placeholders::_1));
+            prop_.ConnectToToss(std::bind(&PropResponder::Tossed, responder_, std::placeholders::_1));
+            prop_.ConnectToDrop(std::bind(&PropResponder::Dropped, responder_, std::placeholders::_1));
+            prop_.ConnectToCatch(std::bind(&PropResponder::Catch, responder_, std::placeholders::_1));
         }
 
 
