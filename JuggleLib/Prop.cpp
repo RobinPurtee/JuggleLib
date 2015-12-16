@@ -7,7 +7,10 @@
 namespace 
 {
     using namespace StateMachine;
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Prop*, responder_);
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Prop*, prop_);
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(IdPublisher, tossed_);
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropPublisher, catch_);
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(IdPublisher, dropped_);
 
     BOOST_MSM_EUML_FLAG(isDroppedFlag_);
     BOOST_MSM_EUML_FLAG(isInFlightFlag_);
@@ -21,11 +24,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            Prop* responder(fsm.get_attribute(responder_));
-            if(nullptr !=  responder)
-            {
-                responder->Catch(fsm.get_attribute(Aid));
-            }
+            fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
         }
     };
 
@@ -40,11 +39,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            Prop* responder(fsm.get_attribute(responder_));
-            if(nullptr !=  responder)
-            {
-                responder->Dropped(fsm.get_attribute(Aid));
-            }
+            fsm.get_attribute(dropped_)(fsm.get_attribute(Aid));
         }
     };
 
@@ -108,11 +103,7 @@ namespace
                 *destinationToss = *sourceToss;
             }
 
-            Prop* responder(fsm.get_attribute(responder_));
-            if(nullptr !=  responder)
-            {
-                responder->Tossed(fsm.get_attribute(Aid));
-            }
+            fsm.get_attribute(tossed_)(fsm.get_attribute(Aid));
         }
     };
 
@@ -176,7 +167,7 @@ namespace
             init_ << DROPPED,
             no_action,
             no_action,
-            attributes_<< Aid << responder_ << Atoss,
+            attributes_<< Aid << prop_ << tossed_ << catch_ << dropped_ << Atoss,
             configure_ << no_configure_,
             invalid_state_transistion
         ), 
@@ -201,10 +192,10 @@ namespace
 
 struct Prop::PropStateMachine : public Base
 {
-    PropStateMachine(int id, Prop* responder)
+    PropStateMachine(int id, Prop* prop)
     {
         get_attribute(StateMachine::Aid) = id;
-        get_attribute(responder_) = responder;
+        get_attribute(prop_) = prop;
     }
 };
 
@@ -280,7 +271,7 @@ int Prop::getCurrentSwap()
 
 void Prop::ConnectToToss(IdSlot slot)
 {
-    tossed_.connect(slot);
+    stateMachine_->get_attribute(tossed_).connect(slot);
 }
 
 /**
@@ -289,7 +280,7 @@ void Prop::ConnectToToss(IdSlot slot)
 
 void Prop::DisconnectFromToss(IdSlot slot)
 {
-    tossed_.disconnect(slot);
+    stateMachine_->get_attribute(tossed_).disconnect(slot);
 }
 
 /**
@@ -298,7 +289,7 @@ void Prop::DisconnectFromToss(IdSlot slot)
 
 void Prop::ConnectToDrop(IdSlot slot)
 {
-    dropped_.connect(slot);
+    stateMachine_->get_attribute(dropped_).connect(slot);
 }
 
 /**
@@ -307,7 +298,7 @@ void Prop::ConnectToDrop(IdSlot slot)
 
 void Prop::DisconnectFromDrop(IdSlot slot)
 {
-    dropped_.disconnect(slot);
+    stateMachine_->get_attribute(dropped_).disconnect(slot);
 }
 
 
@@ -317,7 +308,7 @@ void Prop::DisconnectFromDrop(IdSlot slot)
 
 void Prop::ConnectToCatch(PropSlot slot)
 {
-    ready_to_be_caught_.connect(slot);
+    stateMachine_->get_attribute(catch_).connect(slot);
 }
 
 /**
@@ -326,7 +317,7 @@ void Prop::ConnectToCatch(PropSlot slot)
 
 void Prop::DisconnectFromCatch(PropSlot slot)
 {
-    ready_to_be_caught_.disconnect(slot);
+    stateMachine_->get_attribute(catch_).disconnect(slot);
 }
 
 /**
@@ -359,47 +350,6 @@ void Prop::DisonnectFromAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot)
 bool Prop::isIdValid(int id)
 {
     return id == id_;
-}
-
-/**
- *
- */
-
-void Prop::Tossed(int id)
-{
-    if (isIdValid(id) && !tossed_.empty())
-    {
-        tossed_(id);
-    }
-}
-
-/**
- *
- */
-
-void Prop::Catch(int id)
-{
-    if (isIdValid(id))
-    {
-        toss_.clear();        
-        if( !ready_to_be_caught_.empty())
-        {
-            ready_to_be_caught_(this);
-        }
-    }
-    
-}
-
-/**
- *
- */
-
-void Prop::Dropped(int id)
-{
-    if (isIdValid(id) && !dropped_.empty())
-    {
-        dropped_(id);
-    }
 }
 
 /**

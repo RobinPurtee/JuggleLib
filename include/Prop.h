@@ -58,9 +58,6 @@ public:
     void ConnectToAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot);
     void DisonnectFromAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot);
 
-    void Tossed(int id);
-    void Catch(int id);
-    void Dropped(int id);
 protected:
     //void DecrementSiteswap(int id);
 
@@ -68,11 +65,12 @@ protected:
 
     int getState();
 
-    Throw toss_;
+    
 private:
-    IdPublisher tossed_;
-    PropPublisher ready_to_be_caught_;
-    IdPublisher dropped_;
+    //IdPublisher tossed_;
+    //PropPublisher ready_to_be_caught_;
+    //IdPublisher dropped_;
+    Throw toss_;
 
 
     int id_;
