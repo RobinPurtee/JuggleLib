@@ -12,6 +12,10 @@ namespace
 
     BOOST_MSM_EUML_FLAG(vacant_flag_);
 
+    /*
+     *  toss state and actions
+     */
+
     BOOST_MSM_EUML_ACTION(toss_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
@@ -28,10 +32,10 @@ namespace
 
     BOOST_MSM_EUML_ACTION(release_action)
     {
-        template <class FSM, class EVT, class SourceState, class TargetState>
-        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        template <class FSM, class EVT, class State>
+        void operator()(EVT const& evt, FSM& fsm, State& state)
         {
-            Throw* toss = source.get_attribute(Atoss);
+            Throw* toss = state.get_attribute(Atoss);
             Prop* prop = fsm.getPropsHeld().pop_front();
             if(nullptr != toss && nullptr != prop)
             {
@@ -43,13 +47,14 @@ namespace
     BOOST_MSM_EUML_STATE(
         (
             no_action,
-            no_action,
+            release_action,
             attributes_ << Atoss,
             configure_ << no_configure_
         ), 
         TOSS)
-
-
+    /**
+     * catch state and actions
+     */
     BOOST_MSM_EUML_ACTION(catch_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
@@ -98,6 +103,8 @@ namespace
     BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(pickupEvent, propAttributes)
     BOOST_MSM_EUML_EVENT(caughtEvent)
 
+
+
  
     BOOST_MSM_EUML_ACTION(pickup_action)
     {
@@ -139,10 +146,10 @@ namespace
             (
                 (
                     DWELL + tossEvent / toss_action         == TOSS,
-                    TOSS + releaseEvent / release_action,                     
-                    TOSS + releaseEvent [vacant_guard]      == VACANT,
+                    TOSS + releaseEvent  [vacant_guard]     == VACANT,
                     VACANT + catchEvent / catch_action      == CATCH,
                     CATCH + caughtEvent                     == DWELL,
+                    //DWELL + catchEvent / collision_action           ,
                     VACANT + pickupEvent / pickup_action    == DWELL,
                     DWELL + pickupEvent / pickup_action 
                 )

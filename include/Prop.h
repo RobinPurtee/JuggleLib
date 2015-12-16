@@ -3,18 +3,9 @@
 #include "Throw.h"
 class Hand;
 
-class IPropResponder
-{
-public:
-    virtual void Tossed(int id) = 0;
-    virtual void Catch(int id) = 0;
-    virtual void Dropped(int id) = 0;
-    //virtual void DecrementSiteswap(int id_) = 0;
-    //virtual bool IsInFlight() = 0;
-};
 
 /// This is a base class for an object being juggled
-class Prop : public IPropResponder
+class Prop
 {
 public:
          
@@ -34,7 +25,7 @@ public:
      * The current count away from the next hand
      * @return If the state is Flight then the number of counts away from its 
      *         destination Hand, else the value is 0;
-     * @remark The value is set by the Toss and decremented each time Count is called 
+     * @remark The value is set by the Throw and decremented each time Count is called 
      */
     int getCurrentSwap();
 
@@ -67,10 +58,10 @@ public:
     void ConnectToAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot);
     void DisonnectFromAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot);
 
-protected:
     void Tossed(int id);
     void Catch(int id);
     void Dropped(int id);
+protected:
     //void DecrementSiteswap(int id);
 
     bool isIdValid(int id);

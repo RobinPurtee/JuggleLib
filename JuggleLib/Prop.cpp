@@ -21,7 +21,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            IPropResponder* responder(fsm.get_attribute(responder_));
+            Prop* responder(fsm.get_attribute(responder_));
             if(nullptr !=  responder)
             {
                 responder->Catch(fsm.get_attribute(Aid));
@@ -40,7 +40,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            IPropResponder* responder(fsm.get_attribute(responder_));
+            Prop* responder(fsm.get_attribute(responder_));
             if(nullptr !=  responder)
             {
                 responder->Dropped(fsm.get_attribute(Aid));
@@ -108,7 +108,7 @@ namespace
                 *destinationToss = *sourceToss;
             }
 
-            IPropResponder* responder(fsm.get_attribute(responder_));
+            Prop* responder(fsm.get_attribute(responder_));
             if(nullptr !=  responder)
             {
                 responder->Tossed(fsm.get_attribute(Aid));
@@ -133,6 +133,9 @@ namespace
     };
 
 
+    /**
+     *  Prop state machine transition table
+     */
 
     BOOST_MSM_EUML_TRANSITION_TABLE(
         (
@@ -192,6 +195,10 @@ namespace
 
 }
 
+/**
+ *
+ */
+
 struct Prop::PropStateMachine : public Base
 {
     PropStateMachine(int id, Prop* responder)
@@ -201,6 +208,10 @@ struct Prop::PropStateMachine : public Base
     }
 };
 
+/**
+ *
+ */
+
 Prop::Prop(int id)
 :   stateMachine_(new Prop::PropStateMachine(id, this) )
 ,   id_(id)
@@ -209,9 +220,17 @@ Prop::Prop(int id)
 }
 
 
+/**
+ *
+ */
+
 Prop::~Prop(void)
 {
 }
+
+/**
+ *
+ */
 
 int Prop::getState()
 {
@@ -219,44 +238,72 @@ int Prop::getState()
 }
 
 
+/**
+ *
+ */
+
 const TCHAR* Prop::getStateName()
 {
     return  stateNames[getState()];
 }
+
+/**
+ *
+ */
 
 bool Prop::isDropped()
 {
     return stateMachine_->is_flag_active<isDroppedFlag__helper>();
 }
 
+/**
+ *
+ */
 
 bool Prop::isInFlight()
 {
     return stateMachine_->is_flag_active<isInFlightFlag__helper>();
 }
         
+/**
+ *
+ */
 
 int Prop::getCurrentSwap()
 {
     return toss_.siteswap;
 }
 
+/**
+ *
+ */
+
 void Prop::ConnectToToss(IdSlot slot)
 {
     tossed_.connect(slot);
 }
+
+/**
+ *
+ */
 
 void Prop::DisconnectFromToss(IdSlot slot)
 {
     tossed_.disconnect(slot);
 }
 
-
+/**
+ *
+ */
 
 void Prop::ConnectToDrop(IdSlot slot)
 {
     dropped_.connect(slot);
 }
+
+/**
+ *
+ */
 
 void Prop::DisconnectFromDrop(IdSlot slot)
 {
@@ -264,15 +311,27 @@ void Prop::DisconnectFromDrop(IdSlot slot)
 }
 
 
+/**
+ *
+ */
+
 void Prop::ConnectToCatch(PropSlot slot)
 {
     ready_to_be_caught_.connect(slot);
 }
 
+/**
+ *
+ */
+
 void Prop::DisconnectFromCatch(PropSlot slot)
 {
     ready_to_be_caught_.disconnect(slot);
 }
+
+/**
+ *
+ */
 
 void Prop::ConnectToAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot)
 {
@@ -280,6 +339,10 @@ void Prop::ConnectToAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot)
     ConnectToDrop(dropSlot);
     ConnectToCatch(propSlot);
 }
+
+/**
+ *
+ */
 
 void Prop::DisonnectFromAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot)
 {
@@ -289,10 +352,18 @@ void Prop::DisonnectFromAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot)
 }
 
 
+/**
+ *
+ */
+
 bool Prop::isIdValid(int id)
 {
     return id == id_;
 }
+
+/**
+ *
+ */
 
 void Prop::Tossed(int id)
 {
@@ -301,6 +372,10 @@ void Prop::Tossed(int id)
         tossed_(id);
     }
 }
+
+/**
+ *
+ */
 
 void Prop::Catch(int id)
 {
@@ -314,6 +389,10 @@ void Prop::Catch(int id)
     }
     
 }
+
+/**
+ *
+ */
 
 void Prop::Dropped(int id)
 {
@@ -336,20 +415,36 @@ void Prop::Toss(Throw* toss)
 }
 
 
+/**
+ *
+ */
+
 void Prop::Catch()
 {
     stateMachine_->process_event(StateMachine::catchEvent);
 }
+
+/**
+ *
+ */
 
 void Prop::Collision()
 {
     stateMachine_->process_event(StateMachine::collisionEvent);
 }
 
+/**
+ *
+ */
+
 void Prop::Pickup()
 {
     stateMachine_->process_event(StateMachine::pickupEvent);
 }
+
+/**
+ *
+ */
 
 void Prop::Tick()
 {
