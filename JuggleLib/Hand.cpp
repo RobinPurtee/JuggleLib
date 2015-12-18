@@ -192,15 +192,15 @@ namespace
 
 struct Hand::HandStateMachine : public Base
 {
-    HandStateMachine(int id_)
-        : Base(id_)
+    HandStateMachine(int id)
+        : Base(id)
     {
     }
 };
 
 
-Hand::Hand(int id_)
-: stateMachine(new HandStateMachine(id_))
+Hand::Hand(int id)
+: stateMachine_(new HandStateMachine(id))
 {
 }
 
@@ -209,23 +209,27 @@ Hand::~Hand(void)
 {
 }
 
-
-void Hand::Pickup(Prop* prop_)
+bool Hand::isVacant()
 {
-    assert(nullptr != prop_);
-    stateMachine->process_event(StateMachine::pickupEvent(prop_));
+    return stateMachine_->is_flag_active<vacant_flag__helper>();
+}
+
+void Hand::Pickup(Prop* prop)
+{
+    assert(nullptr != prop);
+    stateMachine_->process_event(StateMachine::pickupEvent(prop));
 }
 
 
-void Hand::Toss(Throw* toss_)
+void Hand::Toss(Throw* toss)
 {
-    assert(nullptr != toss_);
-    stateMachine->process_event(StateMachine::tossEvent(toss_));
+    assert(nullptr != toss);
+    stateMachine_->process_event(StateMachine::tossEvent(toss));
 }
 
-void Hand::Catch(Prop* prop_)
+void Hand::Catch(Prop* prop)
 {
-    assert(nullptr != prop_);
-    stateMachine->process_event(StateMachine::catchEvent(prop_));
+    assert(nullptr != prop);
+    stateMachine_->process_event(StateMachine::catchEvent(prop));
 }
 
