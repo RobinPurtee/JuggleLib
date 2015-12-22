@@ -15,21 +15,20 @@ namespace
 
 
     BOOST_MSM_EUML_EVENT(releaseEvent)
-    BOOST_MSM_EUML_EVENT(caughtEvent)
- 
+        BOOST_MSM_EUML_EVENT(caughtEvent)
 
-    /*
-     *  toss state and actions
-     */
 
-     BOOST_MSM_EUML_ACTION(toss_action)
+        /*
+        *  toss state and actions
+        */
+
+        BOOST_MSM_EUML_ACTION(toss_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             Throw* evtToss(evt.get_attribute(Atoss));
-            if(nullptr != evtToss)
-            {
+            if(nullptr != evtToss){
                 target.get_attribute(Atoss) = evtToss;
             }
         }
@@ -48,8 +47,7 @@ namespace
             if(!propQue.empty())
             {
                 Prop* prop(*propQue.begin());
-                if(nullptr != toss && nullptr != prop)
-                {
+                if(nullptr != toss && nullptr != prop){
                     prop->Toss(toss);
                 }
                 propQue.pop_front();
@@ -59,23 +57,23 @@ namespace
 
     BOOST_MSM_EUML_STATE(
         (
-            no_action,
-            no_action,
-            attributes_ << Atoss,
-            configure_ << no_configure_
+        no_action,
+        no_action,
+        attributes_ << Atoss,
+        configure_ << no_configure_
         ), 
         TOSS)
-    /**
-     * catch state and actions
-     */
-    BOOST_MSM_EUML_ACTION(catch_action)
+        /**
+        * catch state and actions
+        */
+        BOOST_MSM_EUML_ACTION(catch_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             Prop* prop(evt.get_attribute(Aprop));
-            if(nullptr != prop)
-            {
+            if(nullptr != prop){
+                prop->Catch();
                 target.get_attribute(Aprop) = prop;
             }
         }
@@ -87,39 +85,37 @@ namespace
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
             Prop* prop(state.get_attribute(Aprop));
-            if(nullptr != prop)
-            {
-                fsm->getPropsHeld().push_front(prop);
+            if(nullptr != prop){
+                fsm.get_attribute(props_).push_front(prop);
             }
         }
     };
 
     BOOST_MSM_EUML_STATE(
         (
-            no_action,
-            catch_exit_action,
-            attributes_ << Aprop,
-            configure_ << no_configure_
+        no_action,
+        catch_exit_action,
+        attributes_ << Aprop,
+        configure_ << no_configure_
         ), CATCH)
 
 
-    BOOST_MSM_EUML_STATE(
+        BOOST_MSM_EUML_STATE(
         (
-            no_action,
-            no_action,
-            attributes_ << no_attributes_,
-            configure_ << vacant_flag_
+        no_action,
+        no_action,
+        attributes_ << no_attributes_,
+        configure_ << vacant_flag_
         ), VACANT)
 
 
-    BOOST_MSM_EUML_ACTION(pickup_action)
+        BOOST_MSM_EUML_ACTION(pickup_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             Prop* prop = evt.get_attribute(Aprop);
-            if(nullptr != prop)
-            {
+            if(nullptr != prop){
                 fsm.get_attribute(props_).push_back(prop);
                 prop->Pickup();
             }
@@ -127,8 +123,8 @@ namespace
     };
 
     /**
-     *  test if the hand is actually vacant
-     */
+    *  test if the hand is actually vacant
+    */
     BOOST_MSM_EUML_ACTION(vacant_guard)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
@@ -140,25 +136,25 @@ namespace
     };
 
     BOOST_MSM_EUML_TRANSITION_TABLE
-    (
         (
-            VACANT + pickupEvent / pickup_action    == DWELL,
-            DWELL + tossEvent / toss_action         == TOSS,
-            TOSS + releaseEvent /release_action,
-            TOSS [vacant_guard]                     == VACANT,
-            VACANT + catchEvent / catch_action      == CATCH,
-            CATCH + caughtEvent                     == DWELL,
-            DWELL + pickupEvent / pickup_action             //,
-            //DWELL + catchEvent / collision_action           ,
-            //DWELL + releaseEvent / collision_action == VACANT 
+            (
+                VACANT + pickupEvent / pickup_action    == DWELL,
+                DWELL + tossEvent / toss_action         == TOSS,
+                TOSS + releaseEvent /release_action,
+                TOSS [vacant_guard]                     == VACANT,
+                VACANT + catchEvent / catch_action      == CATCH,
+                CATCH + caughtEvent                     == DWELL,
+                DWELL + pickupEvent / pickup_action             //,
+                //DWELL + catchEvent / collision_action           ,
+                //DWELL + releaseEvent / collision_action == VACANT 
+            )
+            , hand_transition_table
         )
-        , hand_transition_table
-    )
 
-     /**
-     * Invalid transistion handler
-     */
-    BOOST_MSM_EUML_ACTION(invalid_state_transistion)
+        /**
+        * Invalid transistion handler
+        */
+        BOOST_MSM_EUML_ACTION(invalid_state_transistion)
     {
         template <class FSM,class Event>
         void operator()(Event const& e,FSM& fsm,int state)
@@ -171,16 +167,16 @@ namespace
 
     BOOST_MSM_EUML_DECLARE_STATE_MACHINE(
         (
-            hand_transition_table,      // The transition table
-            init_ << VACANT,            // The initial State
-            no_action,                  // The startup action
-            no_action,                  // The exit action
-            attributes_ << Aid << props_, // the attributes
-            configure_ << no_configure_, // configuration parameters (flags and funcitons)
-            invalid_state_transistion    // default action if transition is invalid
+        hand_transition_table,      // The transition table
+        init_ << VACANT,            // The initial State
+        no_action,                  // The startup action
+        no_action,                  // The exit action
+        attributes_ << Aid << props_, // the attributes
+        configure_ << no_configure_, // configuration parameters (flags and funcitons)
+        invalid_state_transistion    // default action if transition is invalid
         ), 
         hand_state_machine
-    );
+        );
 
     //class hand_state_machine : public boost::msm::front::state_machine_def<hand_state_machine> 
     //{
@@ -237,7 +233,7 @@ struct Hand::HandStateMachine : public Base
 
 
 Hand::Hand(int id)
-: stateMachine_(new HandStateMachine(id))
+    : stateMachine_(new HandStateMachine(id))
 {
 }
 
@@ -252,8 +248,8 @@ bool Hand::isVacant()
 }
 
 /**
- *
- */
+*
+*/
 
 int Hand::getState()
 {
@@ -262,8 +258,8 @@ int Hand::getState()
 
 
 /**
- *
- */
+*
+*/
 
 const TCHAR* Hand::getStateName()
 {
@@ -293,5 +289,8 @@ void Hand::Catch(Prop* prop)
 {
     assert(nullptr != prop);
     stateMachine_->process_event(StateMachine::catchEvent(prop));
+    if(!prop->isDropped()){
+        stateMachine_->process_event(caughtEvent);
+    }
 }
 
