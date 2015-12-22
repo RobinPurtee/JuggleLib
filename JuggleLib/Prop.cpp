@@ -21,18 +21,8 @@ namespace
     /* 
      *  The catch state and support methods
      */
-    BOOST_MSM_EUML_ACTION(catch_entry)
-    {
-        template <class Event, class FSM, class STATE>
-        void operator()(Event const& evt, FSM& fsm, STATE& state)
-        {
-            fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
-            PropSlot slot(std::bind(&Hand::Catch, destinationToss->destination, std::placeholders::_1));
-            fsm.get_attribute(catch_).connect(slot);
-        }
-    };
 
-    BOOST_MSM_EUML_STATE((catch_entry), CATCH)
+    BOOST_MSM_EUML_STATE((), CATCH)
 
     /* 
      *  The dropped state and support methods
@@ -60,6 +50,36 @@ namespace
     /* 
      *  The flight state and support methods
      */
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropSlot, notify_catch_)
+
+    BOOST_MSM_EUML_ACTION(flight_entry_action)
+    {
+        template <class FSM,class EVT,class State>
+        void operator()(EVT const& evt ,FSM& fsm, State& state )
+        {
+            Throw* destinationToss(fsm.get_attribute(Atoss));
+            Throw* sourceToss(evt.get_attribute(Atoss));
+            if(nullptr != destinationToss && nullptr != sourceToss)
+            {
+                *destinationToss = *sourceToss;
+            }
+
+            fsm.get_attribute(tossed_)(fsm.get_attribute(Aid));
+            PropSlot slot(std::bind(&Hand::Catch, destinationToss->destination, std::placeholders::_1));
+            state.get_attribute(notify_catch_) = slot;
+            fsm.get_attribute(catch_).connect(slot);
+        }
+    };
+
+    BOOST_MSM_EUML_ACTION(flight_exit_action)
+    {
+        template <class Event, class FSM, class STATE>
+        void operator()(Event const& evt, FSM& fsm, STATE& state)
+        {
+            fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
+            fsm.get_attribute(catch_).disconnect(state.get_attribute(notify_catch_));
+        }
+    };
 
 
     BOOST_MSM_EUML_ACTION(tick_action)
@@ -85,9 +105,9 @@ namespace
 
     BOOST_MSM_EUML_STATE(
         (
-            no_action,
-            no_action,
-            attributes_ << no_attributes_,
+            flight_entry_action,
+            flight_exit_action,
+            attributes_ << Atoss << notify_catch_,
             configure_ << isInFlightFlag_
         ), 
         FLIGHT
@@ -95,23 +115,6 @@ namespace
 
 
 
-    BOOST_MSM_EUML_ACTION(toss_action)
-    {
-        template <class FSM,class EVT,class SourceState,class TargetState>
-        void operator()(EVT const& evt ,FSM& fsm,SourceState& ,TargetState& )
-        {
-            Throw* destinationToss(fsm.get_attribute(Atoss));
-            Throw* sourceToss(evt.get_attribute(Atoss));
-            if(nullptr != destinationToss && nullptr != sourceToss)
-            {
-                *destinationToss = *sourceToss;
-            }
-
-            fsm.get_attribute(tossed_)(fsm.get_attribute(Aid));
-            PropSlot slot(std::bind(&Hand::Catch, destinationToss->destination, std::placeholders::_1));
-            fsm.get_attribute(catch_).connect(slot);
-        }
-    };
 
 
     BOOST_MSM_EUML_ACTION(tick_guard)
@@ -136,8 +139,8 @@ namespace
 
     BOOST_MSM_EUML_TRANSITION_TABLE(
         (
-            DWELL + tossEvent / toss_action         == FLIGHT,
-            FLIGHT + tickEvent / tick_action,
+            DWELL + tossEvent                       == FLIGHT,
+            FLIGHT + tickEvent / tick_action                ,
             FLIGHT + catchEvent [tick_guard]        == CATCH,
             CATCH + catchEvent                      == DWELL,
             CATCH + tickEvent                       == DROPPED,

@@ -38,10 +38,12 @@ namespace
 
     BOOST_MSM_EUML_ACTION(release_action)
     {
-        template <class FSM, class EVT, class State>
-        void operator()(EVT const& evt, FSM& fsm, State& state)
+        //template <class FSM, class EVT, class State>
+        //void operator()(EVT const& evt, FSM& fsm, State& state)
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            Throw* toss(state.get_attribute(Atoss));
+            Throw* toss(source.get_attribute(Atoss));
             std::deque<Prop*>& propQue(fsm.get_attribute(props_));
             if(!propQue.empty())
             {
@@ -58,7 +60,7 @@ namespace
     BOOST_MSM_EUML_STATE(
         (
             no_action,
-            release_action,
+            no_action,
             attributes_ << Atoss,
             configure_ << no_configure_
         ), 
@@ -142,7 +144,8 @@ namespace
         (
             VACANT + pickupEvent / pickup_action    == DWELL,
             DWELL + tossEvent / toss_action         == TOSS,
-            TOSS + releaseEvent                     == VACANT,
+            TOSS + releaseEvent /release_action,
+            TOSS [vacant_guard]                     == VACANT,
             VACANT + catchEvent / catch_action      == CATCH,
             CATCH + caughtEvent                     == DWELL,
             DWELL + pickupEvent / pickup_action             //,

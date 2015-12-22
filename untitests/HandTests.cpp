@@ -21,6 +21,7 @@ namespace untitests
 
             std::wstring stateName = hand->getStateName();
 
+            // test that the hand is vacant and the prop is on the floor
             Assert::IsTrue(hand->isVacant(), _T("The hand did not start out vacant"));
             Assert::IsTrue(prop->isDropped(), _T("The prop was not on the ground"));
             hand->Pickup(prop.get());
@@ -34,13 +35,10 @@ namespace untitests
             hand->Release();
             for(int i = 0 ; i < toss->siteswap ; ++i)
             {
-                prop->Tick();
                 Assert::IsTrue(hand->isVacant(), _T("The hand has not released the prop"));
                 Assert::IsTrue(prop->isInFlight(), _T("The prop is not in flight after the release"));
+                prop->Tick();
             }
-            Assert::IsFalse(hand->isVacant(), _T("The hand is vacant when it should be catching"));
-            Assert::IsFalse(prop->isInFlight(), _T("The prop is in flight when it should be in catch"));
-            hand->Catch(prop.get());
             Assert::IsFalse(hand->isVacant(), _T("The hand is vacant when it should have a prop in it dwell"));
             Assert::IsFalse(prop->isInFlight(), _T("The prop is in flight when it should be in dwell"));
             Assert::IsFalse(prop->isDropped(), _T("The prop has be dropped when it shoud be in dwell"));
