@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "JuggleLib.h"
 #include "common_state_machine.h"
+#include "Hand.h"
 #include <iostream>
+
 
 
 namespace 
@@ -25,6 +27,8 @@ namespace
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
             fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
+            PropSlot slot(std::bind(&Hand::Catch, destinationToss->destination, std::placeholders::_1));
+            fsm.get_attribute(catch_).connect(slot);
         }
     };
 
@@ -104,6 +108,8 @@ namespace
             }
 
             fsm.get_attribute(tossed_)(fsm.get_attribute(Aid));
+            PropSlot slot(std::bind(&Hand::Catch, destinationToss->destination, std::placeholders::_1));
+            fsm.get_attribute(catch_).connect(slot);
         }
     };
 
@@ -335,7 +341,7 @@ void Prop::ConnectToAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot)
  *
  */
 
-void Prop::DisonnectFromAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot)
+void Prop::DisconnectFromAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot)
 {
     DisconnectFromToss(tossSlot);
     DisconnectFromDrop(dropSlot);

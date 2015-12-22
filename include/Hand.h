@@ -14,6 +14,11 @@ public:
     Hand(int id);
     ~Hand(void);
 
+     /** 
+     * Get the string of the current state name
+     */
+    const TCHAR* getStateName();
+
 
     void Pickup(Prop* prop);
 
@@ -23,8 +28,11 @@ public:
     bool isVacant();
 
     virtual void Catch(Prop* prop);
+protected:
+        int getState();
 
 private:
+
 
     struct HandStateMachine;
     std::shared_ptr<HandStateMachine> stateMachine_;

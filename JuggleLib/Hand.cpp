@@ -11,12 +11,18 @@ namespace
     using namespace StateMachine;
 
     BOOST_MSM_EUML_FLAG(vacant_flag_);
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(std::deque<Prop*>, props_);
+
+
+    BOOST_MSM_EUML_EVENT(releaseEvent)
+    BOOST_MSM_EUML_EVENT(caughtEvent)
+ 
 
     /*
      *  toss state and actions
      */
 
-    BOOST_MSM_EUML_ACTION(toss_action)
+     BOOST_MSM_EUML_ACTION(toss_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
@@ -35,11 +41,16 @@ namespace
         template <class FSM, class EVT, class State>
         void operator()(EVT const& evt, FSM& fsm, State& state)
         {
-            Throw* toss = state.get_attribute(Atoss);
-            Prop* prop = fsm.getPropsHeld().pop_front();
-            if(nullptr != toss && nullptr != prop)
+            Throw* toss(state.get_attribute(Atoss));
+            std::deque<Prop*>& propQue(fsm.get_attribute(props_));
+            if(!propQue.empty())
             {
-                prop->Toss(toss);
+                Prop* prop(*propQue.begin());
+                if(nullptr != toss && nullptr != prop)
+                {
+                    prop->Toss(toss);
+                }
+                propQue.pop_front();
             }
         }
     };
@@ -99,13 +110,6 @@ namespace
         ), VACANT)
 
 
-    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(releaseEvent, propAttributes)
-    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(pickupEvent, propAttributes)
-    BOOST_MSM_EUML_EVENT(caughtEvent)
-
-
-
- 
     BOOST_MSM_EUML_ACTION(pickup_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
@@ -114,7 +118,8 @@ namespace
             Prop* prop = evt.get_attribute(Aprop);
             if(nullptr != prop)
             {
-                fsm.getPropsHeld().push_back(prop);
+                fsm.get_attribute(props_).push_back(prop);
+                prop->Pickup();
             }
         }
     };
@@ -127,52 +132,80 @@ namespace
         template <class FSM, class EVT, class SourceState, class TargetState>
         bool operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            return fsm.getPropsHeld().empty();
+            std::deque<Prop*>& propQue(fsm.get_attribute(props_));
+            return propQue.empty();
+        }
+    };
+
+    BOOST_MSM_EUML_TRANSITION_TABLE
+    (
+        (
+            VACANT + pickupEvent / pickup_action    == DWELL,
+            DWELL + tossEvent / toss_action         == TOSS,
+            TOSS + releaseEvent                     == VACANT,
+            VACANT + catchEvent / catch_action      == CATCH,
+            CATCH + caughtEvent                     == DWELL,
+            DWELL + pickupEvent / pickup_action             //,
+            //DWELL + catchEvent / collision_action           ,
+            //DWELL + releaseEvent / collision_action == VACANT 
+        )
+        , hand_transition_table
+    )
+
+     /**
+     * Invalid transistion handler
+     */
+    BOOST_MSM_EUML_ACTION(invalid_state_transistion)
+    {
+        template <class FSM,class Event>
+        void operator()(Event const& e,FSM& fsm,int state)
+        {
+            //fsm.process_event(collisionEvent);
         }
     };
 
 
 
-    class hand_state_machine : public boost::msm::front::state_machine_def<hand_state_machine> 
-    {
-        public:
-            typedef VACANT_helper initial_state;
+    BOOST_MSM_EUML_DECLARE_STATE_MACHINE(
+        (
+            hand_transition_table,      // The transition table
+            init_ << VACANT,            // The initial State
+            no_action,                  // The startup action
+            no_action,                  // The exit action
+            attributes_ << Aid << props_, // the attributes
+            configure_ << no_configure_, // configuration parameters (flags and funcitons)
+            invalid_state_transistion    // default action if transition is invalid
+        ), 
+        hand_state_machine
+    );
 
-            hand_state_machine(int id_)
-                :   id(id_) 
-            { }
+    //class hand_state_machine : public boost::msm::front::state_machine_def<hand_state_machine> 
+    //{
+    //    public:
+    //        typedef VACANT_helper initial_state;
 
-            BOOST_MSM_EUML_DECLARE_TRANSITION_TABLE
-            (
-                (
-                    DWELL + tossEvent / toss_action         == TOSS,
-                    TOSS + releaseEvent  [vacant_guard]     == VACANT,
-                    VACANT + catchEvent / catch_action      == CATCH,
-                    CATCH + caughtEvent                     == DWELL,
-                    //DWELL + catchEvent / collision_action           ,
-                    VACANT + pickupEvent / pickup_action    == DWELL,
-                    DWELL + pickupEvent / pickup_action 
-                )
-                , transition_table
-            )
-
-            std::deque<Prop*>& getPropsHeld() 
-            {   
-                return propsHeld; 
-            } 
-            
-            bool is_vacant()
-            {
-                return propsHeld.empty();
-            }
-
-            int get_id()    {return id;}
+    //        hand_state_machine(int id_)
+    //            :   id(id_) 
+    //        { }
 
 
-        private:
-         std::deque<Prop*> propsHeld;
-         int id;
-    };
+    //        std::deque<Prop*>& getPropsHeld() 
+    //        {   
+    //            return propsHeld; 
+    //        } 
+    //        
+    //        bool is_vacant()
+    //        {
+    //            return propsHeld.empty();
+    //        }
+
+    //        int get_id()    {return id;}
+
+
+    //    private:
+    //     std::deque<Prop*> propsHeld;
+    //     int id;
+    //};
 
 
 
@@ -182,9 +215,9 @@ namespace
     typedef msm::back::state_machine<hand_state_machine> Base;
 
     const TCHAR* stateNames[] = {
+        TEXT("Vacant"),
         TEXT("Dwell"),
         TEXT("Toss"),
-        TEXT("Vacant"),
         TEXT("Catch"),
     };
 
@@ -193,8 +226,9 @@ namespace
 struct Hand::HandStateMachine : public Base
 {
     HandStateMachine(int id)
-        : Base(id)
+        : Base()
     {
+        get_attribute(StateMachine::Aid) = id;
     }
 };
 
@@ -214,6 +248,26 @@ bool Hand::isVacant()
     return stateMachine_->is_flag_active<vacant_flag__helper>();
 }
 
+/**
+ *
+ */
+
+int Hand::getState()
+{
+    return (*(stateMachine_->current_state()));
+}
+
+
+/**
+ *
+ */
+
+const TCHAR* Hand::getStateName()
+{
+    return  stateNames[getState()];
+}
+
+
 void Hand::Pickup(Prop* prop)
 {
     assert(nullptr != prop);
@@ -225,6 +279,11 @@ void Hand::Toss(Throw* toss)
 {
     assert(nullptr != toss);
     stateMachine_->process_event(StateMachine::tossEvent(toss));
+}
+
+void Hand::Release()
+{
+    stateMachine_->process_event(releaseEvent);
 }
 
 void Hand::Catch(Prop* prop)

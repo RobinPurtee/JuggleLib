@@ -56,7 +56,7 @@ public:
     void DisconnectFromCatch(PropSlot slot);
 
     void ConnectToAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot);
-    void DisonnectFromAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot);
+    void DisconnectFromAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot);
 
 protected:
     //void DecrementSiteswap(int id);
