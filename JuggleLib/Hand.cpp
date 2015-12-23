@@ -15,7 +15,7 @@ namespace
 
 
     BOOST_MSM_EUML_EVENT(releaseEvent)
-        BOOST_MSM_EUML_EVENT(caughtEvent)
+    BOOST_MSM_EUML_EVENT(caughtEvent)
 
 
         /*
@@ -290,7 +290,7 @@ void Hand::Catch(Prop* prop)
     assert(nullptr != prop);
     stateMachine_->process_event(StateMachine::catchEvent(prop));
     if(!prop->isDropped()){
-        stateMachine_->process_event(caughtEvent);
+        stateMachine_->process_event(StateMachine::caughtEvent);
     }
 }
 

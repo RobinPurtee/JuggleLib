@@ -59,15 +59,16 @@ namespace
         {
             Throw* destinationToss(fsm.get_attribute(Atoss));
             Throw* sourceToss(evt.get_attribute(Atoss));
-            if(nullptr != destinationToss && nullptr != sourceToss)
-            {
-                *destinationToss = *sourceToss;
+            PropSlot slot(nullptr);
+            if(nullptr != destinationToss){
+                if(nullptr != sourceToss){
+                    *destinationToss = *sourceToss;
+                }
+                slot = (std::bind(&Hand::Catch, destinationToss->destination, std::placeholders::_1));
+                state.get_attribute(notify_catch_) = slot;
+                fsm.get_attribute(catch_).connect(slot);
             }
-
             fsm.get_attribute(tossed_)(fsm.get_attribute(Aid));
-            PropSlot slot(std::bind(&Hand::Catch, destinationToss->destination, std::placeholders::_1));
-            state.get_attribute(notify_catch_) = slot;
-            fsm.get_attribute(catch_).connect(slot);
         }
     };
 
@@ -88,14 +89,11 @@ namespace
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             Throw* toss(fsm.get_attribute(Atoss));
-            if(nullptr != toss)
-            {
-                if(0 < toss->siteswap)
-                {
+            if(nullptr != toss){
+                if(0 < toss->siteswap){
                     --toss->siteswap;
                 }
-                if(0 == toss->siteswap)
-                {
+                if(0 == toss->siteswap){
                     fsm.process_event(catchEvent);
                 }
             }
@@ -141,8 +139,8 @@ namespace
         (
             DWELL + tossEvent                       == FLIGHT,
             FLIGHT + tickEvent / tick_action                ,
-            FLIGHT + catchEvent [tick_guard]        == CATCH,
-            CATCH + catchEvent                      == DWELL,
+            FLIGHT + catchEvent                     == CATCH,
+            CATCH + caughtEvent                     == DWELL,
             CATCH + tickEvent                       == DROPPED,
             DROPPED + pickupEvent                   == DWELL,
             DWELL + collisionEvent                  == DROPPED,
@@ -232,9 +230,9 @@ Prop::~Prop(void)
  *
  */
 
-int Prop::getState()
+Prop::State Prop::getState()
 {
-    return (*(stateMachine_->current_state()));
+    return static_cast<Prop::State>((*(stateMachine_->current_state())));
 }
 
 
@@ -244,7 +242,7 @@ int Prop::getState()
 
 const TCHAR* Prop::getStateName()
 {
-    return  stateNames[getState()];
+    return  stateNames[(*(stateMachine_->current_state()))];
 }
 
 /**
@@ -380,7 +378,7 @@ void Prop::Toss(Throw* toss)
 
 void Prop::Catch()
 {
-    stateMachine_->process_event(StateMachine::catchEvent);
+    stateMachine_->process_event(StateMachine::caughtEvent);
 }
 
 /**

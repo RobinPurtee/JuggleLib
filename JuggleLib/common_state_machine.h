@@ -23,6 +23,8 @@ namespace StateMachine
     BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(pickupEvent, propAttributes)
     BOOST_MSM_EUML_EVENT(collisionEvent)
     BOOST_MSM_EUML_EVENT(tickEvent)
+    BOOST_MSM_EUML_EVENT(caughtEvent)
+
 
     BOOST_MSM_EUML_STATE((), DWELL)
 }

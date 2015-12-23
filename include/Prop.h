@@ -15,6 +15,9 @@ public:
     //Properties
     int get_id()        {return id_;}
 
+    enum class State:int {DWELL = 0, FLIGHT, CATCH, DROPPED};
+
+    Prop::State getState();
 
     /** 
      * Get the string of the current state name
@@ -63,7 +66,6 @@ protected:
 
     bool isIdValid(int id);
 
-    int getState();
 
     
 private:

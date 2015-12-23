@@ -4,6 +4,7 @@
 #include "Prop.h"
 #include "Throw.h"
 #include "Hand.h"
+#include "DebugStringStream.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -34,6 +35,9 @@ namespace untitests
             {
                 has_caught = true;
                 id_error = nullptr == prop;
+                if(!id_error){
+                    DebugOut("In Catch state: %s", prop->getStateName());
+                }
             }
 
             void Dropped(int id_)
@@ -112,9 +116,9 @@ namespace untitests
 
             connect_prop_responder(prop, &responder);
   
-            Assert::IsTrue(prop.isDropped());
+            Assert::IsTrue(prop.isDropped(), _T("The did not start on the ground"));
             prop.Catch();
-            Assert::IsTrue(prop.isDropped());
+            Assert::IsTrue(prop.isDropped(), _T("The Prop was caught from the ground which is wrong"));
         }
 
         TEST_METHOD(dropped_once_caught_test)
@@ -128,17 +132,27 @@ namespace untitests
             connect_prop_responder(prop, &responder);
 
             prop.Pickup();
+            DebugOut(_T("After Pickup: %s\n"), prop.getStateName());
+            Assert::IsTrue(Prop::State::DWELL == prop.getState(), _T("The state is not DWELL after Pickup"));
             prop.Toss(&pass);
+            DebugOut(_T("After Toss: %s\n"), prop.getStateName());
+
             Assert::IsTrue(responder.has_tossed, _T("Prop did not trick the tossed notification"));
             Assert::IsTrue(prop.isInFlight(), _T("Prop is not in Flight"));
             prop.Tick();
+            DebugOut(_T("After Tick: %s\n"), prop.getStateName());
             Assert::IsFalse(prop.isInFlight(), _T("Prop is still Flight when it should be in Catch"));
             Assert::IsTrue(responder.has_caught, _T("Prop has not notified of coming catch"));
             prop.Catch();
+            DebugOut(_T("After first Catch: %s\n"), prop.getStateName());
+            Assert::IsTrue(Prop::State::CATCH == prop.getState(), _T("Prop is not in CATCH state after first Catch call"));
+            prop.Catch();
+            DebugOut(_T("After Second Catch: %s\n"), prop.getStateName());
             Assert::IsTrue(responder.has_caught, _T("The Catch did not trigger the catch notification"));
             Assert::IsFalse(prop.isDropped(), _T("Prop has dropped during catch"));
             Assert::IsFalse(prop.isInFlight(), _T("Prop thinks it is still in flight when should be Dwell"));
             prop.Collision();
+            DebugOut(_T("After Second Catch: %s\n"), prop.getStateName());
             Assert::IsTrue(responder.has_dropped, _T("Prop has not sent the drop notification"));
             Assert::IsTrue(prop.isDropped(), _T("The Prop was not dropped by the collision"));
         }
