@@ -49,17 +49,17 @@ public:
     virtual void Tick();
 
     
-    void ConnectToToss(IdSlot slot);
-    void DisconnectFromToss(IdSlot slot);
+    void ConnectToToss(PropSlot slot);
+    void DisconnectFromToss(PropSlot slot);
 
-    void ConnectToDrop(IdSlot slot);
-    void DisconnectFromDrop(IdSlot slot);
+    void ConnectToDrop(PropSlot slot);
+    void DisconnectFromDrop(PropSlot slot);
 
     void ConnectToCatch(PropSlot slot);
     void DisconnectFromCatch(PropSlot slot);
 
-    void ConnectToAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot);
-    void DisconnectFromAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot);
+    void ConnectToAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
+    void DisconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
 
 protected:
     //void DecrementSiteswap(int id);

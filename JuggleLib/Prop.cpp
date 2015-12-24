@@ -10,9 +10,9 @@ namespace
 {
     using namespace StateMachine;
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Prop*, prop_);
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(IdPublisher, tossed_);
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropPublisher, tossed_);
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropPublisher, catch_);
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(IdPublisher, dropped_);
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropPublisher, dropped_);
 
     BOOST_MSM_EUML_FLAG(isDroppedFlag_);
     BOOST_MSM_EUML_FLAG(isInFlightFlag_);
@@ -33,7 +33,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            fsm.get_attribute(dropped_)(fsm.get_attribute(Aid));
+            fsm.get_attribute(dropped_)(fsm.get_attribute(prop_));
         }
     };
 
@@ -64,11 +64,16 @@ namespace
                 if(nullptr != sourceToss){
                     *destinationToss = *sourceToss;
                 }
-                slot = (std::bind(&Hand::Catch, destinationToss->destination, std::placeholders::_1));
-                state.get_attribute(notify_catch_) = slot;
-                fsm.get_attribute(catch_).connect(slot);
+                if(nullptr != destinationToss->destination){
+                    slot = (std::bind(&Hand::Catch, destinationToss->destination, std::placeholders::_1));
+                    state.get_attribute(notify_catch_) = slot;
+                    fsm.get_attribute(catch_).connect(slot);
+                }
+                else{
+                    state.get_attribute(notify_catch_) = nullptr;
+                }
             }
-            fsm.get_attribute(tossed_)(fsm.get_attribute(Aid));
+            fsm.get_attribute(tossed_)(fsm.get_attribute(prop_));
         }
     };
 
@@ -78,7 +83,9 @@ namespace
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
             fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
-            fsm.get_attribute(catch_).disconnect(state.get_attribute(notify_catch_));
+            if(nullptr != state.get_attribute(notify_catch_)){
+                fsm.get_attribute(catch_).disconnect(state.get_attribute(notify_catch_));
+            }
         }
     };
 
@@ -276,7 +283,7 @@ int Prop::getCurrentSwap()
  *
  */
 
-void Prop::ConnectToToss(IdSlot slot)
+void Prop::ConnectToToss(PropSlot slot)
 {
     stateMachine_->get_attribute(tossed_).connect(slot);
 }
@@ -285,7 +292,7 @@ void Prop::ConnectToToss(IdSlot slot)
  *
  */
 
-void Prop::DisconnectFromToss(IdSlot slot)
+void Prop::DisconnectFromToss(PropSlot slot)
 {
     stateMachine_->get_attribute(tossed_).disconnect(slot);
 }
@@ -294,7 +301,7 @@ void Prop::DisconnectFromToss(IdSlot slot)
  *
  */
 
-void Prop::ConnectToDrop(IdSlot slot)
+void Prop::ConnectToDrop(PropSlot slot)
 {
     stateMachine_->get_attribute(dropped_).connect(slot);
 }
@@ -303,7 +310,7 @@ void Prop::ConnectToDrop(IdSlot slot)
  *
  */
 
-void Prop::DisconnectFromDrop(IdSlot slot)
+void Prop::DisconnectFromDrop(PropSlot slot)
 {
     stateMachine_->get_attribute(dropped_).disconnect(slot);
 }
@@ -331,7 +338,7 @@ void Prop::DisconnectFromCatch(PropSlot slot)
  *
  */
 
-void Prop::ConnectToAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot)
+void Prop::ConnectToAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot)
 {
     ConnectToToss(tossSlot);
     ConnectToDrop(dropSlot);
@@ -342,7 +349,7 @@ void Prop::ConnectToAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot)
  *
  */
 
-void Prop::DisconnectFromAll(IdSlot tossSlot, IdSlot dropSlot, PropSlot propSlot)
+void Prop::DisconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot)
 {
     DisconnectFromToss(tossSlot);
     DisconnectFromDrop(dropSlot);
