@@ -21,14 +21,15 @@ namespace
         *  toss state and actions
         */
 
-        BOOST_MSM_EUML_ACTION(toss_action)
+    BOOST_MSM_EUML_ACTION(toss_entry_action)
     {
-        template <class FSM, class EVT, class SourceState, class TargetState>
-        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        template <class FSM, class EVT, class State>
+        void operator()(EVT const& evt, FSM& fsm, State& state)
         {
+            DebugOut(_T("HandStateMachine::toss_entry_action"));
             Throw* evtToss(evt.get_attribute(Atoss));
             if(nullptr != evtToss){
-                target.get_attribute(Atoss) = evtToss;
+                state.get_attribute(Atoss) = evtToss;
             }
         }
     };
@@ -36,11 +37,10 @@ namespace
 
     BOOST_MSM_EUML_ACTION(release_action)
     {
-        //template <class FSM, class EVT, class State>
-        //void operator()(EVT const& evt, FSM& fsm, State& state)
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
+            DebugOut(_T("HandStateMachine::release_action"));
             Throw* toss(source.get_attribute(Atoss));
             std::deque<Prop*>& propQue(fsm.get_attribute(props_));
             if(!propQue.empty())
@@ -56,23 +56,24 @@ namespace
 
     BOOST_MSM_EUML_STATE(
         (
+            toss_entry_action,
             no_action,
-        no_action,
             attributes_ << Atoss,
             configure_ << no_configure_
         ), TOSS)
-        /**
-        * catch state and actions
-        */
-        BOOST_MSM_EUML_ACTION(catch_action)
+
+    /**
+    * catch state and actions
+    */
+    BOOST_MSM_EUML_ACTION(catch_entry_action)
     {
-        template <class FSM, class EVT, class SourceState, class TargetState>
-        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        template <class FSM, class EVT, class State>
+        void operator()(EVT const& evt, FSM& fsm, State& state )
         {
+            DebugOut(_T("HandStateMachine::catch_entry_action"));
             Prop* prop(evt.get_attribute(Aprop));
             if(nullptr != prop){
-                prop->Catch();
-                target.get_attribute(Aprop) = prop;
+                state.get_attribute(Aprop) = prop;
             }
         }
     };
@@ -82,22 +83,18 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
+            DebugOut(_T("HandStateMachine::catch_exit_action"));
             Prop* prop(state.get_attribute(Aprop));
-            if(nullptr != prop){
-                if(!prop->isDropped()){
-                    prop->Catch();
-                    fsm.get_attribute(props_).push_front(prop);
-                }
-                else{
-
-                }
+            if(nullptr != prop && !prop->isDropped()){
+                prop->Catch();
+                fsm.get_attribute(props_).push_front(prop);
             }
         }
     };
 
     BOOST_MSM_EUML_STATE(
         (
-            no_action,
+            catch_entry_action,
             catch_exit_action,
             attributes_ << Aprop,
             configure_ << no_configure_
@@ -118,6 +115,7 @@ namespace
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
+            DebugOut(_T("HandStateMachine::pickup_action"));
             Prop* prop = evt.get_attribute(Aprop);
             if(nullptr != prop){
                 fsm.get_attribute(props_).push_back(prop);
@@ -135,6 +133,7 @@ namespace
         bool operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             std::deque<Prop*>& propQue(fsm.get_attribute(props_));
+            DebugOut() << "HandStateMachine::vacant_guard: returned " << std::boolalpha << propQue.empty();
             return propQue.empty();
         }
     };
@@ -143,10 +142,10 @@ namespace
         (
             (
                 VACANT + pickupEvent / pickup_action    == DWELL,
-                DWELL + tossEvent / toss_action         == TOSS,
-                TOSS + releaseEvent /release_action,
+                DWELL + tossEvent                       == TOSS,
+                TOSS + releaseEvent / release_action,
                 TOSS [vacant_guard]                     == VACANT,
-                VACANT + catchEvent / catch_action      == CATCH,
+                VACANT + catchEvent                     == CATCH,
                 CATCH + caughtEvent                     == DWELL,
                 DWELL + pickupEvent / pickup_action             //,
                 //DWELL + catchEvent / collision_action           ,

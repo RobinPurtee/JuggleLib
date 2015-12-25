@@ -27,9 +27,18 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut() << "Entering Catch State" << std::endl;
+            DebugOut() << "PropStateMachine::catch_entry_action";
         }
     };
+    BOOST_MSM_EUML_ACTION(catch_exit_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            DebugOut(_T("PropStateMachine::catch_exit_action"));
+        }
+    };
+
 
     BOOST_MSM_EUML_STATE((catch_entry_action), CATCH)
 
@@ -42,6 +51,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
+            DebugOut(_T("PropStateMachine::dropped_entry"));
             fsm.get_attribute(dropped_)(fsm.get_attribute(prop_));
         }
     };
@@ -66,6 +76,7 @@ namespace
         template <class FSM,class EVT,class State>
         void operator()(EVT const& evt ,FSM& fsm, State& state )
         {
+            DebugOut(_T("PropStateMachine::flight_entry_action"));
             Throw* destinationToss(fsm.get_attribute(Atoss));
             Throw* sourceToss(evt.get_attribute(Atoss));
             PropSlot slot(nullptr);
@@ -91,20 +102,11 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
+            DebugOut(_T("PropStateMachine::flight_exit_action"));
             fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
             if(nullptr != state.get_attribute(notify_catch_)){
                 fsm.get_attribute(catch_).disconnect(state.get_attribute(notify_catch_));
             }
-        }
-    };
-
-    BOOST_MSM_EUML_ACTION(catch_action)
-    {
-        template <class FSM, class EVT, class SourceState, class TargetState>
-        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
-        {
-            fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
-            fsm.get_attribute(catch_).disconnect(source.get_attribute(notify_catch_));
         }
     };
 
@@ -114,6 +116,7 @@ namespace
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
+            DebugOut(_T("PropStateMachine::tick_action"));
             Throw* toss(fsm.get_attribute(Atoss));
             if(nullptr != toss){
                 if(0 < toss->siteswap){
@@ -127,23 +130,13 @@ namespace
         }
     };
 
-    BOOST_MSM_EUML_DECLARE_STATE(
+    BOOST_MSM_EUML_STATE(
         (
             flight_entry_action,
-            no_action,
+            flight_exit_action,
             attributes_ << Atoss << notify_catch_,
             configure_ << isInFlightFlag_
-        ), 
-        FLIGHT_def
-    )
-    struct FLIGHT_impl : public FLIGHT_def
-    {
-        BOOST_MSM_EUML_DECLARE_INTERNAL_TRANSITION_TABLE((
-            tickEvent / tick_action 
-        ))
-    };
-    FLIGHT_impl const FLIGHT;
-
+        ), FLIGHT)
 
 
 
@@ -171,7 +164,8 @@ namespace
     BOOST_MSM_EUML_TRANSITION_TABLE(
         (
             DWELL + tossEvent                       == FLIGHT,
-            FLIGHT [tick_guard] / catch_action      == CATCH,
+            FLIGHT + tickEvent / tick_action,
+            FLIGHT [tick_guard]                     == CATCH,
             CATCH + caughtEvent                     == DWELL,
             CATCH + tickEvent                       == DROPPED,
             DROPPED + pickupEvent                   == DWELL,

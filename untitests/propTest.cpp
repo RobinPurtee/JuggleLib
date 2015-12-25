@@ -50,26 +50,29 @@ namespace untitests
         };
 
 
-        void connect_prop_responder(Prop& prop_, PropResponder* responder_)
+        void connect_prop_responder(Prop& prop, PropResponder* responder)
         {
-            prop_.ConnectToToss(std::bind(&PropResponder::Tossed, responder_, std::placeholders::_1));
-            prop_.ConnectToDrop(std::bind(&PropResponder::Dropped, responder_, std::placeholders::_1));
-            prop_.ConnectToCatch(std::bind(&PropResponder::Catch, responder_, std::placeholders::_1));
+            prop.ConnectToToss(std::bind(&PropResponder::Tossed, responder, std::placeholders::_1));
+            prop.ConnectToDrop(std::bind(&PropResponder::Dropped, responder, std::placeholders::_1));
+            prop.ConnectToCatch(std::bind(&PropResponder::Catch, responder, std::placeholders::_1));
         }
 
 
         void run_til_catch(Prop& prop, PropResponder& responder)
         {
-            int siteswap(3);
+            int siteswap(1);
             Throw pass(siteswap, nullptr);
 
             prop.Pickup();
+            DebugOut(_T("propTest::run_til_catch: After Pickup state: %s"), prop.getStateName()); 
             prop.Toss(&pass);
+            DebugOut(_T("propTest::run_til_catch: After Toss state: %s"), prop.getStateName()); 
             Assert::IsTrue(responder.has_tossed_);
             while(0 < siteswap)
             {
                 Assert::IsFalse(responder.has_caught_, _T("The Prop trigger the catch notification early"));
                 prop.Tick();
+                DebugOut(_T("propTest::run_til_catch: After Tick state: %s"), prop.getStateName()); 
                 --siteswap;
             }
         }
@@ -85,7 +88,8 @@ namespace untitests
             connect_prop_responder(prop, &responder);
             run_til_catch(prop, responder);
             prop.Tick();
-            Assert::IsTrue(responder.has_dropped_);
+            DebugOut(_T("propTest::test_drop: After Dropping Tick state: %s"), prop.getStateName()); 
+            Assert::IsTrue(responder.has_dropped_, _T("test_drop: The prop was NOT dropped"));
         }
 
         TEST_METHOD(test_catch)
