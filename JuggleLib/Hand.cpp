@@ -57,12 +57,11 @@ namespace
 
     BOOST_MSM_EUML_STATE(
         (
+            no_action,
         no_action,
-        no_action,
-        attributes_ << Atoss,
-        configure_ << no_configure_
-        ), 
-        TOSS)
+            attributes_ << Atoss,
+            configure_ << no_configure_
+        ), TOSS)
         /**
         * catch state and actions
         */
@@ -86,30 +85,36 @@ namespace
         {
             Prop* prop(state.get_attribute(Aprop));
             if(nullptr != prop){
-                fsm.get_attribute(props_).push_front(prop);
+                if(!prop-isDropped()){
+                    prop->Catch();
+                    fsm.get_attribute(props_).push_front(prop);
+                }
+                else{
+
+                }
             }
         }
     };
 
     BOOST_MSM_EUML_STATE(
         (
-        no_action,
-        catch_exit_action,
-        attributes_ << Aprop,
-        configure_ << no_configure_
+            no_action,
+            catch_exit_action,
+            attributes_ << Aprop,
+            configure_ << no_configure_
         ), CATCH)
 
 
         BOOST_MSM_EUML_STATE(
         (
-        no_action,
-        no_action,
-        attributes_ << no_attributes_,
-        configure_ << vacant_flag_
+            no_action,
+            no_action,
+            attributes_ << no_attributes_,
+            configure_ << vacant_flag_
         ), VACANT)
 
 
-        BOOST_MSM_EUML_ACTION(pickup_action)
+    BOOST_MSM_EUML_ACTION(pickup_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
@@ -148,7 +153,7 @@ namespace
                 //DWELL + catchEvent / collision_action           ,
                 //DWELL + releaseEvent / collision_action == VACANT 
             )
-            , hand_transition_table
+            , hand_transition_table                     
         )
 
         /**
@@ -167,47 +172,14 @@ namespace
 
     BOOST_MSM_EUML_DECLARE_STATE_MACHINE(
         (
-        hand_transition_table,      // The transition table
-        init_ << VACANT,            // The initial State
-        no_action,                  // The startup action
-        no_action,                  // The exit action
-        attributes_ << Aid << props_, // the attributes
-        configure_ << no_configure_, // configuration parameters (flags and funcitons)
-        invalid_state_transistion    // default action if transition is invalid
-        ), 
-        hand_state_machine
-        );
-
-    //class hand_state_machine : public boost::msm::front::state_machine_def<hand_state_machine> 
-    //{
-    //    public:
-    //        typedef VACANT_helper initial_state;
-
-    //        hand_state_machine(int id_)
-    //            :   id(id_) 
-    //        { }
-
-
-    //        std::deque<Prop*>& getPropsHeld() 
-    //        {   
-    //            return propsHeld; 
-    //        } 
-    //        
-    //        bool is_vacant()
-    //        {
-    //            return propsHeld.empty();
-    //        }
-
-    //        int get_id()    {return id;}
-
-
-    //    private:
-    //     std::deque<Prop*> propsHeld;
-    //     int id;
-    //};
-
-
-
+            hand_transition_table,      // The transition table
+            init_ << VACANT,            // The initial State
+            no_action,                  // The startup action
+            no_action,                  // The exit action
+            attributes_ << Aid << props_, // the attributes
+            configure_ << no_configure_, // configuration parameters (flags and funcitons)
+            invalid_state_transistion    // default action if transition is invalid
+        ), hand_state_machine );
 
     // the type for the state machine
 
@@ -251,9 +223,9 @@ bool Hand::isVacant()
 *
 */
 
-int Hand::getState()
+Hand::State Hand::getState()
 {
-    return (*(stateMachine_->current_state()));
+    return (static_cast<Hand::State>(*(stateMachine_->current_state())));
 }
 
 
@@ -263,7 +235,7 @@ int Hand::getState()
 
 const TCHAR* Hand::getStateName()
 {
-    return  stateNames[getState()];
+    return  stateNames[*(stateMachine_->current_state())];
 }
 
 
@@ -289,8 +261,16 @@ void Hand::Catch(Prop* prop)
 {
     assert(nullptr != prop);
     stateMachine_->process_event(StateMachine::catchEvent(prop));
+}
+
+void Hand::caught(Prop* prop)
+{
+    assert(nullptr != prop);
     if(!prop->isDropped()){
         stateMachine_->process_event(StateMachine::caughtEvent);
     }
 }
+
+
+
 

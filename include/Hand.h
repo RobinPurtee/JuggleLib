@@ -9,11 +9,12 @@ class Hand
 {
 public:
 
-    //enum State { VACANT, CATCH, DWELL, TOSS };
+    enum class State:int { VACANT = 0, DWELL, TOSS, CATCH };
 
     Hand(int id);
     ~Hand(void);
 
+    Hand::State getState();
      /** 
      * Get the string of the current state name
      */
@@ -28,8 +29,10 @@ public:
     bool isVacant();
 
     virtual void Catch(Prop* prop);
+
+    void caught(Prop* prop);
+
 protected:
-        int getState();
 
 private:
 
