@@ -84,7 +84,7 @@ namespace
         {
             Prop* prop(state.get_attribute(Aprop));
             if(nullptr != prop){
-                if(!prop-isDropped()){
+                if(!prop->isDropped()){
                     prop->Catch();
                     fsm.get_attribute(props_).push_front(prop);
                 }
