@@ -168,20 +168,23 @@ namespace untitests
         {
             PropResponder responder;
             Prop prop(test_id_);
-            Hand hand(0);
             int siteswap(1);
-            Throw pass(siteswap, &hand);
+            Throw pass(siteswap, nullptr);
 
             connect_prop_responder(prop, &responder);
 
             prop.Pickup();
+            DebugOut(_T("After Pickup: %s\n"), prop.getStateName());
             prop.Toss(&pass);
-            Assert::IsTrue(responder.has_tossed_, _T("Prop did not trick the tossed notification"));
+            DebugOut(_T("After Toss: %s\n"), prop.getStateName());
+            Assert::IsTrue(responder.has_tossed_, _T("Prop did not tick the tossed notification"));
             Assert::IsTrue(prop.isInFlight(), _T("Prop is not in Flight"));
             prop.Tick();
+            DebugOut(_T("After first Tick: %s\n"), prop.getStateName());
             Assert::IsFalse(prop.isInFlight(), _T("Prop is still Flight when it should be in Catch"));
             Assert::IsTrue(responder.has_caught_, _T("Prop has not notified of coming catch"));
             prop.Tick();
+            DebugOut(_T("After second Tick: %s\n"), prop.getStateName());
             Assert::IsTrue(responder.has_dropped_, _T("Prop has not sent the drop notification"));
             Assert::IsTrue(prop.isDropped(), _T("The Prop was not dropped by missing the catch"));
         }
