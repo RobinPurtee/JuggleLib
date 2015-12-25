@@ -15,7 +15,6 @@ namespace
 
 
     BOOST_MSM_EUML_EVENT(releaseEvent)
-    BOOST_MSM_EUML_EVENT(caughtEvent)
 
 
         /*

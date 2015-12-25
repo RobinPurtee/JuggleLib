@@ -14,3 +14,4 @@
 #include <string>
 #include <algorithm>
 #include <exception>
+#include "DebugStringStream.h"

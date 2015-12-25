@@ -22,7 +22,16 @@ namespace
      *  The catch state and support methods
      */
 
-    BOOST_MSM_EUML_STATE((), CATCH)
+    BOOST_MSM_EUML_ACTION(catch_entry_action)
+    {
+        template <class Event, class FSM, class STATE>
+        void operator()(Event const& evt, FSM& fsm, STATE& state)
+        {
+            DebugOut() << "Entering Catch State" << std::endl;
+        }
+    };
+
+    BOOST_MSM_EUML_STATE((catch_entry_action), CATCH)
 
     /* 
      *  The dropped state and support methods
@@ -89,6 +98,16 @@ namespace
         }
     };
 
+    BOOST_MSM_EUML_ACTION(catch_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
+            fsm.get_attribute(catch_).disconnect(source.get_attribute(notify_catch_));
+        }
+    };
+
 
     BOOST_MSM_EUML_ACTION(tick_action)
     {
@@ -100,23 +119,30 @@ namespace
                 if(0 < toss->siteswap){
                     --toss->siteswap;
                 }
-                if(0 == toss->siteswap){
-                    fsm.process_event(catchEvent);
-                }
+                //if(0 == toss->siteswap){
+                //    fsm.process_event(catchEvent);
+                //}
             }
             
         }
     };
 
-    BOOST_MSM_EUML_STATE(
+    BOOST_MSM_EUML_DECLARE_STATE(
         (
             flight_entry_action,
-            flight_exit_action,
+            no_action,
             attributes_ << Atoss << notify_catch_,
             configure_ << isInFlightFlag_
         ), 
-        FLIGHT
+        FLIGHT_def
     )
+    struct FLIGHT_impl : public FLIGHT_def
+    {
+        BOOST_MSM_EUML_DECLARE_INTERNAL_TRANSITION_TABLE((
+            tickEvent / tick_action 
+        ))
+    };
+    FLIGHT_impl const FLIGHT;
 
 
 
@@ -145,8 +171,7 @@ namespace
     BOOST_MSM_EUML_TRANSITION_TABLE(
         (
             DWELL + tossEvent                       == FLIGHT,
-            FLIGHT + tickEvent / tick_action                ,
-            FLIGHT + catchEvent                     == CATCH,
+            FLIGHT [tick_guard] / catch_action      == CATCH,
             CATCH + caughtEvent                     == DWELL,
             CATCH + tickEvent                       == DROPPED,
             DROPPED + pickupEvent                   == DWELL,
