@@ -25,10 +25,13 @@ namespace untitests
             {}
 
 
-            void Tossed(int id_)
+            void Tossed(Prop* prop)
             {
                 has_tossed = true;
-                id_error = id_ != test_id;
+                id_error = nullptr == prop;
+                if(!id_error){
+                    DebugOut(_T("In Tossed callback: %s"), prop->getStateName());
+                }
             }
 
             void Catch(Prop* prop)
@@ -36,14 +39,17 @@ namespace untitests
                 has_caught = true;
                 id_error = nullptr == prop;
                 if(!id_error){
-                    DebugOut("In Catch state: %s", prop->getStateName());
+                    DebugOut(_T("In Catch callback: %s"), prop->getStateName());
                 }
             }
 
-            void Dropped(int id_)
+            void Dropped(Prop* prop)
             {
                 has_dropped = true;
-                id_error = id_ != test_id;
+                id_error = nullptr == prop;
+                if(!id_error){
+                    DebugOut(_T("In Dropped callback: %s"), prop->getStateName());
+                }
             }
 
             bool has_tossed;
