@@ -89,6 +89,9 @@ namespace
                 prop->Catch();
                 fsm.get_attribute(props_).push_front(prop);
             }
+            else{
+                fsm.process_event(collisionEvent);
+            }
         }
     };
 
@@ -146,7 +149,10 @@ namespace
                 TOSS + releaseEvent / release_action,
                 TOSS [vacant_guard]                     == VACANT,
                 VACANT + catchEvent                     == CATCH,
+                VACANT [!vacant_guard]                  == DWELL,
                 CATCH + caughtEvent                     == DWELL,
+                CATCH + collisionEvent  [vacant_guard]  == VACANT,
+                CATCH + collisionEvent  [!vacant_guard] == DWELL,
                 DWELL + pickupEvent / pickup_action             //,
                 //DWELL + catchEvent / collision_action           ,
                 //DWELL + releaseEvent / collision_action == VACANT 
@@ -259,6 +265,12 @@ void Hand::Catch(Prop* prop)
 {
     assert(nullptr != prop);
     stateMachine_->process_event(StateMachine::catchEvent(prop));
+}
+
+void Hand::Collision(Prop* prop)
+{
+    assert(nullptr != prop);
+    stateMachine_->process_event(StateMachine::collisionEvent(prop));
 }
 
 void Hand::caught(Prop* prop)

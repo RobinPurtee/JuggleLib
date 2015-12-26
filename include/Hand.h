@@ -30,6 +30,8 @@ public:
 
     virtual void Catch(Prop* prop);
 
+    void Collision(Prop* prop);
+
     void caught(Prop* prop);
 
 protected:

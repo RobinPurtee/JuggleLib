@@ -119,7 +119,6 @@ namespace untitests
         {
             PropResponder responder;
             Prop prop(test_id_);
-            Hand hand(0);
             int siteswap(1);
             Throw pass(siteswap, nullptr);
 

@@ -70,6 +70,7 @@ namespace
      *  The flight state and support methods
      */
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropSlot, notify_catch_)
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropSlot, notify_drop_)
 
     BOOST_MSM_EUML_ACTION(flight_entry_action)
     {
@@ -88,6 +89,9 @@ namespace
                     slot = (std::bind(&Hand::Catch, destinationToss->destination, std::placeholders::_1));
                     state.get_attribute(notify_catch_) = slot;
                     fsm.get_attribute(catch_).connect(slot);
+                    slot = (std::bind(&Hand::Collision, destinationToss->destination, std::placeholders::_1));
+                    state.get_attribute(notify_drop_) = slot;
+                    fsm.get_attribute(dropped_).connect(slot);
                 }
                 else{
                     state.get_attribute(notify_catch_) = nullptr;
@@ -104,8 +108,13 @@ namespace
         {
             DebugOut(_T("PropStateMachine::flight_exit_action"));
             fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
+            auto catchCallback = fsm.get_attribute(catch_);
+            auto fred = state.get_attribute(notify_catch_);
             if(nullptr != state.get_attribute(notify_catch_)){
                 fsm.get_attribute(catch_).disconnect(state.get_attribute(notify_catch_));
+            }
+            if(nullptr != state.get_attribute(notify_drop_)){
+                fsm.get_attribute(dropped_).disconnect(state.get_attribute(notify_catch_));
             }
         }
     };
@@ -122,9 +131,6 @@ namespace
                 if(0 < toss->siteswap){
                     --toss->siteswap;
                 }
-                //if(0 == toss->siteswap){
-                //    fsm.process_event(catchEvent);
-                //}
             }
             
         }
@@ -134,7 +140,7 @@ namespace
         (
             flight_entry_action,
             flight_exit_action,
-            attributes_ << Atoss << notify_catch_,
+            attributes_ << Atoss << notify_catch_ << notify_drop_,
             configure_ << isInFlightFlag_
         ), FLIGHT)
 
@@ -179,7 +185,7 @@ namespace
 
     /**
      * Invalid transistion handler
-     * in this case could a collisionEvent to force the Dropped state
+     * in this case process a collisionEvent to force the Dropped state
      */
     BOOST_MSM_EUML_ACTION(invalid_state_transistion)
     {
@@ -413,7 +419,7 @@ void Prop::Catch()
 
 void Prop::Collision()
 {
-    stateMachine_->process_event(StateMachine::collisionEvent);
+    stateMachine_->process_event(StateMachine::collisionEvent(this));
 }
 
 /**
@@ -433,3 +439,4 @@ void Prop::Tick()
 {
     stateMachine_->process_event(StateMachine::tickEvent);
 }
+
