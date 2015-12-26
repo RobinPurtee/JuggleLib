@@ -15,11 +15,14 @@ namespace
 
 
     BOOST_MSM_EUML_EVENT(releaseEvent)
+    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(pickupEvent, propAttributes)
+    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(catchEvent, propAttributes)
+    BOOST_MSM_EUML_EVENT(caughtEvent);
 
 
-        /*
-        *  toss state and actions
-        */
+    /*
+     *  toss state and actions
+     */
 
     BOOST_MSM_EUML_ACTION(toss_entry_action)
     {
@@ -55,12 +58,12 @@ namespace
     };
 
     BOOST_MSM_EUML_STATE(
-        (
-            toss_entry_action,
-            no_action,
-            attributes_ << Atoss,
-            configure_ << no_configure_
-        ), TOSS)
+    (
+        toss_entry_action,
+        no_action,
+        attributes_ << Atoss,
+        configure_ << no_configure_
+    ), TOSS)
 
     /**
     * catch state and actions
@@ -86,33 +89,52 @@ namespace
             DebugOut(_T("HandStateMachine::catch_exit_action"));
             Prop* prop(state.get_attribute(Aprop));
             if(nullptr != prop && !prop->isDropped()){
-                prop->Catch();
+                prop->Catch(fsm.get_attribute(Ahand));
                 fsm.get_attribute(props_).push_front(prop);
-            }
-            else{
-                fsm.process_event(collisionEvent);
             }
         }
     };
 
     BOOST_MSM_EUML_STATE(
-        (
-            catch_entry_action,
-            catch_exit_action,
-            attributes_ << Aprop,
-            configure_ << no_configure_
-        ), CATCH)
+    (
+        catch_entry_action,
+        catch_exit_action,
+        attributes_ << Aprop,
+        configure_ << no_configure_
+    ), CATCH)
+
+    /** 
+     *  Vacant state
+     */ 
+     BOOST_MSM_EUML_ACTION(vacant_entry_action)
+    {
+        template <class Event, class FSM, class STATE>
+        void operator()(Event const& evt, FSM& fsm, STATE& state)
+        {
+            DebugOut(_T("HandStateMachine::vacant_entry_action"));
+        }
+    };
+
+     BOOST_MSM_EUML_ACTION(vacant_exit_action)
+    {
+        template <class Event, class FSM, class STATE>
+        void operator()(Event const& evt, FSM& fsm, STATE& state)
+        {
+            DebugOut(_T("HandStateMachine::vacant_entry_action"));
+        }
+    };
+    BOOST_MSM_EUML_STATE(
+    (
+        vacant_entry_action,
+        vacant_exit_action,
+        attributes_ << no_attributes_,
+        configure_ << vacant_flag_
+    ), VACANT)
 
 
-        BOOST_MSM_EUML_STATE(
-        (
-            no_action,
-            no_action,
-            attributes_ << no_attributes_,
-            configure_ << vacant_flag_
-        ), VACANT)
-
-
+    /** 
+     *  Pickup action
+     */
     BOOST_MSM_EUML_ACTION(pickup_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
@@ -122,7 +144,7 @@ namespace
             Prop* prop = evt.get_attribute(Aprop);
             if(nullptr != prop){
                 fsm.get_attribute(props_).push_back(prop);
-                prop->Pickup();
+                prop->Pickup(fsm.get_attribute(Ahand));
             }
         }
     };
@@ -141,6 +163,10 @@ namespace
         }
     };
 
+    /** 
+     *
+     */
+
     BOOST_MSM_EUML_TRANSITION_TABLE
         (
             (
@@ -151,8 +177,8 @@ namespace
                 VACANT + catchEvent                     == CATCH,
                 VACANT [!vacant_guard]                  == DWELL,
                 CATCH + caughtEvent                     == DWELL,
-                CATCH + collisionEvent  [vacant_guard]  == VACANT,
-                CATCH + collisionEvent  [!vacant_guard] == DWELL,
+                CATCH + collisionEvent                  == VACANT,
+                //CATCH + collisionEvent  [!vacant_guard] == DWELL,
                 DWELL + pickupEvent / pickup_action             //,
                 //DWELL + catchEvent / collision_action           ,
                 //DWELL + releaseEvent / collision_action == VACANT 
@@ -180,7 +206,7 @@ namespace
             init_ << VACANT,            // The initial State
             no_action,                  // The startup action
             no_action,                  // The exit action
-            attributes_ << Aid << props_, // the attributes
+            attributes_ << Aid << props_ << Ahand, // the attributes
             configure_ << no_configure_, // configuration parameters (flags and funcitons)
             invalid_state_transistion    // default action if transition is invalid
         ), hand_state_machine );
@@ -200,16 +226,17 @@ namespace
 
 struct Hand::HandStateMachine : public Base
 {
-    HandStateMachine(int id)
+    HandStateMachine(int id, Hand* hand)
         : Base()
     {
         get_attribute(StateMachine::Aid) = id;
+        get_attribute(StateMachine::Ahand) = hand;
     }
 };
 
 
 Hand::Hand(int id)
-    : stateMachine_(new HandStateMachine(id))
+    : stateMachine_(new HandStateMachine(id, this))
 {
 }
 
@@ -223,6 +250,14 @@ bool Hand::isVacant()
     return stateMachine_->is_flag_active<vacant_flag__helper>();
 }
 
+/**
+*
+*/
+
+int Hand::getId()
+{
+    return stateMachine_->get_attribute(Aid);
+}
 /**
 *
 */
@@ -246,7 +281,7 @@ const TCHAR* Hand::getStateName()
 void Hand::Pickup(Prop* prop)
 {
     assert(nullptr != prop);
-    stateMachine_->process_event(StateMachine::pickupEvent(prop));
+    stateMachine_->process_event(pickupEvent(prop));
 }
 
 
@@ -264,20 +299,23 @@ void Hand::Release()
 void Hand::Catch(Prop* prop)
 {
     assert(nullptr != prop);
-    stateMachine_->process_event(StateMachine::catchEvent(prop));
+    DebugOut(_T("Hand::Catch(%d) in state: %s Hand state: %s") , prop->getId(), prop->getStateName(), getStateName());
+    stateMachine_->process_event(catchEvent(prop));
 }
 
 void Hand::Collision(Prop* prop)
 {
     assert(nullptr != prop);
+    DebugOut(_T("Hand::Collision(%d) in state: %s Hand state: %s"), prop->getId(), prop->getStateName(), getStateName());
     stateMachine_->process_event(StateMachine::collisionEvent(prop));
 }
 
 void Hand::caught(Prop* prop)
 {
     assert(nullptr != prop);
+    DebugOut(_T("Hand::caught(%d) in state: %s Hand state: %s"), prop->getId(), prop->getStateName(), getStateName());
     if(!prop->isDropped()){
-        stateMachine_->process_event(StateMachine::caughtEvent);
+        stateMachine_->process_event(caughtEvent);
     }
 }
 

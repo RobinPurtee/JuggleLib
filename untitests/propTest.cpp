@@ -63,7 +63,7 @@ namespace untitests
             int siteswap(1);
             Throw pass(siteswap, nullptr);
 
-            prop.Pickup();
+            prop.Pickup(nullptr);
             DebugOut(_T("propTest::run_til_catch: After Pickup state: %s"), prop.getStateName()); 
             prop.Toss(&pass);
             DebugOut(_T("propTest::run_til_catch: After Toss state: %s"), prop.getStateName()); 
@@ -99,7 +99,7 @@ namespace untitests
 
             connect_prop_responder(prop, &responder);
             run_til_catch(prop, responder);
-            prop.Catch();
+            prop.Catch(nullptr);
             Assert::IsFalse(responder.has_dropped_, _T("The prop was dropped"));
         }
 
@@ -111,7 +111,7 @@ namespace untitests
             connect_prop_responder(prop, &responder);
   
             Assert::IsTrue(prop.isDropped(), _T("The did not start on the ground"));
-            prop.Catch();
+            prop.Catch(nullptr);
             Assert::IsTrue(prop.isDropped(), _T("The Prop was caught from the ground which is wrong"));
         }
 
@@ -124,7 +124,7 @@ namespace untitests
 
             connect_prop_responder(prop, &responder);
 
-            prop.Pickup();
+            prop.Pickup(nullptr);
             DebugOut(_T("After Pickup: %s\n"), prop.getStateName());
             Assert::IsTrue(Prop::State::DWELL == prop.getState(), _T("The state is not DWELL after Pickup"));
             prop.Toss(&pass);
@@ -137,13 +137,13 @@ namespace untitests
             Assert::IsFalse(prop.isInFlight(), _T("Prop is still Flight when it should be in Catch"));
             Assert::IsTrue(responder.has_caught_, _T("Prop has not notified of coming catch"));
             Assert::IsTrue(Prop::State::CATCH == prop.getState(), _T("Prop is not in CATCH state after ticked out Catch call"));
-            prop.Catch();
+            prop.Catch(nullptr);
             DebugOut(_T("After first Catch: %s\n"), prop.getStateName());
             Assert::IsTrue(responder.has_caught_, _T("The Catch did not trigger the catch notification"));
             Assert::IsFalse(prop.isDropped(), _T("Prop has dropped during catch"));
             Assert::IsFalse(prop.isInFlight(), _T("Prop thinks it is still in flight when should be Dwell"));
             prop.Collision();
-            DebugOut(_T("After Collistion: %s\n"), prop.getStateName());
+            DebugOut(_T("After Collision: %s\n"), prop.getStateName());
             Assert::IsTrue(responder.has_dropped_, _T("Prop has not sent the drop notification"));
             Assert::IsTrue(prop.isDropped(), _T("The Prop was not dropped by the collision"));
         }
@@ -152,13 +152,12 @@ namespace untitests
         {
             PropResponder responder;
             Prop prop(test_id_);
-            Hand hand(0);
             int siteswap(1);
-            Throw pass(siteswap, &hand);
+            Throw pass(siteswap, nullptr);
 
             connect_prop_responder(prop, &responder);
 
-            prop.Pickup();
+            prop.Pickup(nullptr);
             prop.Toss(&pass);
             Assert::IsTrue(responder.has_tossed_, _T("Prop did not trick the tossed notification"));
             Assert::IsTrue(prop.isInFlight(), _T("Prop is not in Flight"));
@@ -176,7 +175,7 @@ namespace untitests
 
             connect_prop_responder(prop, &responder);
 
-            prop.Pickup();
+            prop.Pickup(nullptr);
             DebugOut(_T("After Pickup: %s\n"), prop.getStateName());
             prop.Toss(&pass);
             DebugOut(_T("After Toss: %s\n"), prop.getStateName());

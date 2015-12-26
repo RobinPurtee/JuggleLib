@@ -13,7 +13,7 @@ public:
     virtual ~Prop(void);
 
     //Properties
-    int get_id()        {return id_;}
+    int getId()         {return id_;}
 
     enum class State:int {DWELL = 0, FLIGHT, CATCH, DROPPED};
 
@@ -40,11 +40,11 @@ public:
 
     virtual void Toss(Throw* pass);
 
-    virtual void Catch();
+    virtual void Catch(Hand* hand);
 
     virtual void Collision();
 
-    virtual void Pickup();
+    virtual void Pickup(Hand* hand);
 
     virtual void Tick();
 

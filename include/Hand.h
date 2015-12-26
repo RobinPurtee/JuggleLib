@@ -14,6 +14,8 @@ public:
     Hand(int id);
     ~Hand(void);
 
+    int getId();
+
     Hand::State getState();
      /** 
      * Get the string of the current state name

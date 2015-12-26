@@ -3,6 +3,7 @@
 #include "common_state_machine.h"
 #include "Hand.h"
 #include <iostream>
+#include <typeinfo>
 
 
 
@@ -16,6 +17,38 @@ namespace
 
     BOOST_MSM_EUML_FLAG(isDroppedFlag_);
     BOOST_MSM_EUML_FLAG(isInFlightFlag_);
+
+    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(pickupEvent, handAttributes)
+    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(caughtEvent, handAttributes)
+
+    template<class FSM>
+    void connectHandToFsm(FSM& fsm, Hand* hand)
+    { 
+        if(nullptr == hand){
+            return;
+        }
+        fsm.get_attribute(Ahand) = hand;
+        PropSlot slot(nullptr);
+        slot = (std::bind(&Hand::Catch, hand, std::placeholders::_1));
+        fsm.get_attribute(catch_).connect(slot);
+        slot = (std::bind(&Hand::Collision, hand, std::placeholders::_1));
+        fsm.get_attribute(dropped_).connect(slot);
+    }
+
+    template<class FSM>
+    void disconnectHandFromFsm(FSM& fsm)
+    {
+        Hand* hand = fsm.get_attribute(Ahand);
+        if(nullptr == hand){
+            return;
+        }
+        fsm.get_attribute(Ahand) = nullptr;
+        PropSlot slot(nullptr);
+        slot = (std::bind(&Hand::Catch, hand, std::placeholders::_1));
+        fsm.get_attribute(catch_).disconnect(slot);
+        slot = (std::bind(&Hand::Collision, hand, std::placeholders::_1));
+        fsm.get_attribute(dropped_).disconnect(slot);
+    }
 
 
     /* 
@@ -32,15 +65,18 @@ namespace
     };
     BOOST_MSM_EUML_ACTION(catch_exit_action)
     {
-        template <class FSM, class EVT, class SourceState, class TargetState>
-        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        template <class FSM, class EVT, class State>
+        void operator()(EVT const& evt, FSM& fsm, State& state)
         {
             DebugOut(_T("PropStateMachine::catch_exit_action"));
         }
     };
-
-
-    BOOST_MSM_EUML_STATE((catch_entry_action), CATCH)
+   
+    BOOST_MSM_EUML_STATE(
+    (
+        catch_entry_action, 
+        catch_exit_action
+    ), CATCH)
 
     /* 
      *  The dropped state and support methods
@@ -52,25 +88,24 @@ namespace
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
             DebugOut(_T("PropStateMachine::dropped_entry"));
-            fsm.get_attribute(dropped_)(fsm.get_attribute(prop_));
+            if(!fsm.get_attribute(dropped_).empty()){
+                fsm.get_attribute(dropped_)(fsm.get_attribute(prop_));
+            }
+            disconnectHandFromFsm(fsm);
         }
     };
 
     BOOST_MSM_EUML_STATE(
-        (
-            dropped_entry,
-            no_action,
-            attributes_ << no_attributes_,
-            configure_ << isDroppedFlag_
-        ), 
-        DROPPED
-    )
+    (
+        dropped_entry,
+        no_action,
+        attributes_ << no_attributes_,
+        configure_ << isDroppedFlag_
+    ), DROPPED)
  
     /* 
      *  The flight state and support methods
      */
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropSlot, notify_catch_)
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropSlot, notify_drop_)
 
     BOOST_MSM_EUML_ACTION(flight_entry_action)
     {
@@ -86,18 +121,15 @@ namespace
                     *destinationToss = *sourceToss;
                 }
                 if(nullptr != destinationToss->destination){
-                    slot = (std::bind(&Hand::Catch, destinationToss->destination, std::placeholders::_1));
-                    state.get_attribute(notify_catch_) = slot;
-                    fsm.get_attribute(catch_).connect(slot);
-                    slot = (std::bind(&Hand::Collision, destinationToss->destination, std::placeholders::_1));
-                    state.get_attribute(notify_drop_) = slot;
-                    fsm.get_attribute(dropped_).connect(slot);
-                }
-                else{
-                    state.get_attribute(notify_catch_) = nullptr;
+                    if(nullptr != fsm.get_attribute(Ahand)){
+                        disconnectHandFromFsm(fsm);
+                    }
+                    connectHandToFsm(fsm, destinationToss->destination);
                 }
             }
-            fsm.get_attribute(tossed_)(fsm.get_attribute(prop_));
+            if(!fsm.get_attribute(tossed_).empty()){
+                fsm.get_attribute(tossed_)(fsm.get_attribute(prop_));
+            }
         }
     };
 
@@ -107,18 +139,11 @@ namespace
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
             DebugOut(_T("PropStateMachine::flight_exit_action"));
-            fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
-            auto catchCallback = fsm.get_attribute(catch_);
-            auto fred = state.get_attribute(notify_catch_);
-            if(nullptr != state.get_attribute(notify_catch_)){
-                fsm.get_attribute(catch_).disconnect(state.get_attribute(notify_catch_));
-            }
-            if(nullptr != state.get_attribute(notify_drop_)){
-                fsm.get_attribute(dropped_).disconnect(state.get_attribute(notify_catch_));
+            if(!fsm.get_attribute(catch_).empty()){
+                fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
             }
         }
     };
-
 
     BOOST_MSM_EUML_ACTION(tick_action)
     {
@@ -137,15 +162,12 @@ namespace
     };
 
     BOOST_MSM_EUML_STATE(
-        (
-            flight_entry_action,
-            flight_exit_action,
-            attributes_ << Atoss << notify_catch_ << notify_drop_,
-            configure_ << isInFlightFlag_
-        ), FLIGHT)
-
-
-
+    (
+        flight_entry_action,
+        flight_exit_action,
+        attributes_ << Atoss ,
+        configure_ << isInFlightFlag_
+    ), FLIGHT)
 
     BOOST_MSM_EUML_ACTION(tick_guard)
     {
@@ -163,25 +185,37 @@ namespace
     };
 
 
+    BOOST_MSM_EUML_ACTION(pickup_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            Hand* hand(evt.get_attribute(Ahand));
+            if(nullptr != hand){
+                connectHandToFsm(fsm, hand);
+            }
+        }
+    };
+
+
+
     /**
      *  Prop state machine transition table
      */
 
     BOOST_MSM_EUML_TRANSITION_TABLE(
-        (
-            DWELL + tossEvent                       == FLIGHT,
-            FLIGHT + tickEvent / tick_action,
-            FLIGHT [tick_guard]                     == CATCH,
-            CATCH + caughtEvent                     == DWELL,
-            CATCH + tickEvent                       == DROPPED,
-            DROPPED + pickupEvent                   == DWELL,
-            DWELL + collisionEvent                  == DROPPED,
-            FLIGHT + collisionEvent                 == DROPPED,
-            CATCH + collisionEvent                  == DROPPED,
-            DROPPED + collisionEvent
-        )
-        , prop_transition_table
-    )
+    (
+        DWELL + tossEvent                       == FLIGHT,
+        FLIGHT + tickEvent / tick_action,
+        FLIGHT [tick_guard]                     == CATCH,
+        CATCH + caughtEvent                     == DWELL,
+        CATCH + tickEvent                       == DROPPED,
+        DROPPED + pickupEvent / pickup_action   == DWELL,
+        DWELL + collisionEvent                  == DROPPED,
+        FLIGHT + collisionEvent                 == DROPPED,
+        CATCH + collisionEvent                  == DROPPED,
+        DROPPED + collisionEvent
+    ), prop_transition_table)
 
     /**
      * Invalid transistion handler
@@ -192,6 +226,7 @@ namespace
         template <class FSM,class Event>
         void operator()(Event const& e,FSM& fsm,int state)
         {
+            DebugOut() << "PropStateMachine::invald_state_transistion: by event: " << typeid(e).name() << "with PropMachine state: " << state; 
             fsm.process_event(collisionEvent);
         }
     };
@@ -199,19 +234,16 @@ namespace
     /**
      * The declaration of the actual state machine type
      */
-    BOOST_MSM_EUML_DECLARE_STATE_MACHINE
-    ( 
-        (
-            prop_transition_table, 
-            init_ << DROPPED,
-            no_action,
-            no_action,
-            attributes_<< Aid << prop_ << tossed_ << catch_ << dropped_ << Atoss,
-            configure_ << no_configure_,
-            invalid_state_transistion
-        ), 
-        prop_state_machine
-    )
+    BOOST_MSM_EUML_DECLARE_STATE_MACHINE( 
+    (
+        prop_transition_table, 
+        init_ << DROPPED,
+        no_action,
+        no_action,
+        attributes_<< Aid << prop_ << tossed_ << catch_ << dropped_ << Atoss << Ahand,
+        configure_ << no_configure_,
+        invalid_state_transistion
+    ), prop_state_machine)
 
     // the type for the state machine
 
@@ -235,6 +267,7 @@ struct Prop::PropStateMachine : public Base
     {
         get_attribute(StateMachine::Aid) = id;
         get_attribute(prop_) = prop;
+        get_attribute(Ahand) = nullptr;
     }
 };
 
@@ -408,9 +441,12 @@ void Prop::Toss(Throw* toss)
  *
  */
 
-void Prop::Catch()
+void Prop::Catch(Hand* hand)
 {
-    stateMachine_->process_event(StateMachine::caughtEvent);
+    DebugOut(_T("Prop::Catch(%d) Prop state: %s  Hand state: %s"), hand->getId(), getStateName(), hand->getStateName()); 
+    if(State::DROPPED != getState()){
+        stateMachine_->process_event(caughtEvent(hand));
+    }
 }
 
 /**
@@ -426,9 +462,9 @@ void Prop::Collision()
  *
  */
 
-void Prop::Pickup()
+void Prop::Pickup(Hand* hand)
 {
-    stateMachine_->process_event(StateMachine::pickupEvent);
+    stateMachine_->process_event(pickupEvent(hand));
 }
 
 /**
