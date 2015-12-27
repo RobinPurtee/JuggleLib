@@ -443,7 +443,9 @@ void Prop::Toss(Throw* toss)
 
 void Prop::Catch(Hand* hand)
 {
-    DebugOut(_T("Prop::Catch(%d) Prop state: %s  Hand state: %s"), hand->getId(), getStateName(), hand->getStateName()); 
+    if(nullptr != hand){
+        DebugOut(_T("Prop::Catch(%d) Prop state: %s  Hand state: %s"), hand->getId(), getStateName(), hand->getStateName()); 
+    }
     if(State::DROPPED != getState()){
         stateMachine_->process_event(caughtEvent(hand));
     }
