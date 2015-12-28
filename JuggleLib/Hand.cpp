@@ -147,8 +147,8 @@ namespace
             (
                 VACANT + pickupEvent / pickup_action    == DWELL,
                 DWELL + tossEvent                       == TOSS,
-                TOSS + releaseEvent / release_action,
-                TOSS [vacant_guard]                     == VACANT,
+                TOSS + releaseEvent [vacant_guard]      == VACANT,
+                TOSS + releaseEvent [!vacant_guard]     == DWELL,
                 VACANT + catchEvent                     == CATCH,
                 VACANT [!vacant_guard]                  == DWELL,
                 CATCH + caughtEvent                     == DWELL,
@@ -275,13 +275,13 @@ void Hand::Toss(Throw* toss)
 
 void Hand::Release()
 {
-    stateMachine_->process_event(releaseEvent);
     if(!props_.empty())
     {
         Prop* prop(*(props_.begin()));
         props_.pop_front();
         prop->Toss(&toss_);      
     }
+    stateMachine_->process_event(releaseEvent);
 }
 
 void Hand::Catch(Prop* prop)

@@ -38,7 +38,7 @@ public:
     bool isDropped();
     bool isInFlight();
 
-    virtual void Toss(Throw* pass);
+    virtual void Toss(Throw* toss);
 
     virtual void Catch(Hand* hand);
 
