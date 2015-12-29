@@ -38,42 +38,48 @@ public:
     bool isDropped();
     bool isInFlight();
 
-    virtual void Toss(Throw* toss);
+    void Toss(Throw& toss);
 
-    virtual void Catch(Hand* hand);
+    void Caught();
 
-    virtual void Collision();
+    void Collision();
 
-    virtual void Pickup(Hand* hand);
+    void Pickup(Hand* hand);
 
-    virtual void Tick();
+    void Tick();
 
     
-    void ConnectToToss(PropSlot slot);
-    void DisconnectFromToss(PropSlot slot);
+    void connectToToss(PropSlot slot);
+    void disconnectFromToss(PropSlot slot);
 
-    void ConnectToDrop(PropSlot slot);
-    void DisconnectFromDrop(PropSlot slot);
+    void connectToDrop(PropSlot slot);
+    void disconnectFromDrop(PropSlot slot);
 
-    void ConnectToCatch(PropSlot slot);
-    void DisconnectFromCatch(PropSlot slot);
+    void connectToCatch(PropSlot slot);
+    void disconnectFromCatch(PropSlot slot);
 
-    void ConnectToAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
-    void DisconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
+    void connectToAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
+    void disconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
 
+    void dropped();
 protected:
-    //void DecrementSiteswap(int id);
+    bool decrementSiteswap();
+
 
     bool isIdValid(int id);
 
 
     
 private:
-    //IdPublisher tossed_;
-    //PropPublisher ready_to_be_caught_;
-    //IdPublisher dropped_;
-    Throw toss_;
+    void connectHand(Hand* hand);
+    void disconnectHand();
 
+
+    PropPublisher tossed_;
+    PropPublisher catch_;
+    PropPublisher dropped_;
+    Throw toss_;
+    Hand* hand_;
 
     int id_;
     struct PropStateMachine;

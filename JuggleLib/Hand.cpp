@@ -212,7 +212,7 @@ struct Hand::HandStateMachine : public Base
 Hand::Hand(int id)
     : stateMachine_(new HandStateMachine(this))
     , id_(id)
-    , toss_(0, nullptr)
+    , toss_(nullptr)
     , propCatching_(nullptr)
 {
 }
@@ -269,8 +269,8 @@ void Hand::Pickup(Prop* prop)
 void Hand::Toss(Throw* toss)
 {
     assert(nullptr != toss);
-    stateMachine_->process_event(StateMachine::tossEvent(toss));
-    toss_ = *toss;
+    stateMachine_->process_event(StateMachine::tossEvent);
+    toss_ = toss;
 }
 
 void Hand::Release()
@@ -279,7 +279,8 @@ void Hand::Release()
     {
         Prop* prop(*(props_.begin()));
         props_.pop_front();
-        prop->Toss(&toss_);      
+        prop->Toss(*toss_);
+        toss_ = nullptr;
     }
     stateMachine_->process_event(releaseEvent);
 }
@@ -293,12 +294,12 @@ void Hand::Catch(Prop* prop)
 
 }
 
-void Hand::caught(Prop* prop)
+void Hand::Caught(Prop* prop)
 {
     DebugOut(_T("Hand::caught(%d) in state: %s Hand state: %s"), prop->getId(), prop->getStateName(), getStateName());
     if(nullptr != prop && !prop->isDropped()){
         stateMachine_->process_event(caughtEvent);
-        prop->Catch(this);
+        prop->Caught();
         props_.push_front(prop);
     }
 }

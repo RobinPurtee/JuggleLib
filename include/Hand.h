@@ -31,17 +31,17 @@ public:
     bool isVacant();
 
     void Catch(Prop* prop);
+    void Caught(Prop* prop);
 
     void Collision(Prop* prop);
 
-    void caught(Prop* prop);
 
 protected:
 
 private:
 
     std::deque<Prop*> props_;
-    Throw toss_;
+    Throw* toss_;
     int id_;
     Prop* propCatching_;
 
