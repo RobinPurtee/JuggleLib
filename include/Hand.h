@@ -35,6 +35,9 @@ public:
 
     void Collision(Prop* prop);
 
+#if defined(_DEBUG)
+    std::wstring toString();
+#endif // defined(_DEBUG)
 
 protected:
 

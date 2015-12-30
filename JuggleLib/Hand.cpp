@@ -311,6 +311,22 @@ void Hand::Collision(Prop* prop)
     stateMachine_->process_event(StateMachine::collisionEvent(prop));
 }
 
+#if defined(_DEBUG)
+
+#include <sstream>
+std::wstring Hand::toString()
+{
+    std::wstringstream out;
+    out << L"Hand id: " << id_ << L" State: " << getStateName() << std::endl;
+    for(Prop* p : props_){
+        out << L"    Prop id: " << p->getId() << L" State: " << p->getStateName() << std::endl;
+    }
+
+    return out.str();
+}
+
+#endif // defined(_DEBUG)
+
 
 
 

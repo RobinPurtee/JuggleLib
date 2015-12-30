@@ -48,7 +48,6 @@ namespace untitests
             }
 
             DebugOut(_T("after prop flight \n    Hand: %s\n    Prop: %s"), hand.getStateName(), prop.getStateName());
-//            Assert::IsFalse(hand.isVacant(), _T("The hand is vacant when it should have a prop in it CATCH"));
             Assert::IsFalse(prop.isInFlight(), _T("The prop is in flight when it should be in dwell"));
             Assert::IsTrue(Prop::State::CATCH == prop.getState(), _T("The Prop is not in the CATCH state"));
             Assert::IsTrue(Hand::State::CATCH == hand.getState(), _T("The Hand is not in the CATCH state"));
@@ -91,6 +90,24 @@ namespace untitests
             DebugOut(_T("after hand caught \n    Hand: %s\n    Prop: %s"), hand.getStateName(), prop.getStateName());
             Assert::IsTrue(hand.isVacant(), _T("The hand still thinks it has caught the club"));
  
+        }
+
+        TEST_METHOD(tTest)
+        {
+            Hand hand(0);
+            Prop prop0(0);
+            Prop prop1(1);
+            Throw toss(4, &hand);
+
+            hand.Pickup(&prop0);
+            DebugOut(L"after first pickup \n  %s", hand.toString().c_str());
+            Assert::IsFalse(hand.isVacant(), _T("hand is still vacant after the pick up"));
+            Assert::IsFalse(prop0.isDropped(), _T("prop0 was not picked up"));
+            hand.Pickup(&prop1);
+            DebugOut(L"after second pickup \n  %s", hand.toString().c_str());
+            Assert::IsFalse(hand.isVacant(), _T("hand is still vacant after the pick up"));
+            Assert::IsFalse(prop0.isDropped(), _T("prop0 was not picked up"));
+
         }
 
     };

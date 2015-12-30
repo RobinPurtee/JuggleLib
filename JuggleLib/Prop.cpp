@@ -11,6 +11,7 @@ namespace
 {
     using namespace StateMachine;
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Prop*, prop_);
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropSlot, drop_);
 
     BOOST_MSM_EUML_FLAG(isDroppedFlag_);
     BOOST_MSM_EUML_FLAG(isInFlightFlag_);
@@ -57,7 +58,7 @@ namespace
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
             DebugOut(_T("PropStateMachine::dropped_entry"));
-            fsm.get_attribute(prop_)->dropped();
+            fsm.get_attribute(drop_)(fsm.get_attribute(prop_));
         }
     };
 
@@ -139,7 +140,7 @@ namespace
         init_ << DROPPED,
         no_action,
         no_action,
-        attributes_  << prop_,
+        attributes_  << prop_ << drop_,
         configure_ << no_configure_,
         invalid_state_transistion
     ), prop_state_machine)
@@ -161,9 +162,11 @@ namespace
  */
 struct Prop::PropStateMachine : public Base
 {
-    PropStateMachine(Prop* prop)
+    PropStateMachine(Prop* prop, PropSlot drop)
     {
         get_attribute(prop_) = prop;
+        get_attribute(drop_) = drop;
+
     }
 };
 
@@ -171,7 +174,7 @@ struct Prop::PropStateMachine : public Base
  *
  */
 Prop::Prop(int id)
-:   stateMachine_(new Prop::PropStateMachine(this) )
+:   stateMachine_(new Prop::PropStateMachine(this, std::bind(&Prop::dropped, this, std::placeholders::_1)) )
 ,   id_(id)
 ,   hand_(nullptr)
 {
@@ -372,6 +375,8 @@ void Prop::Tick()
     }
 }
 
+// Private methods
+
 bool Prop::decrementSiteswap()
 {
     bool bRet(0 == toss_.siteswap);
@@ -382,10 +387,12 @@ bool Prop::decrementSiteswap()
     return bRet; 
 }
 
-void Prop::dropped()
+void Prop::dropped(Prop* prop)
 {
-    dropped_(this);
-    disconnectHand();
+    if(this == prop){
+        dropped_(this);
+        disconnectHand();
+    }
 
 }
 

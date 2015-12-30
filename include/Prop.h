@@ -61,7 +61,6 @@ public:
     void connectToAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
     void disconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
 
-    void dropped();
 protected:
     bool decrementSiteswap();
 
@@ -71,6 +70,7 @@ protected:
 
     
 private:
+    void dropped(Prop* prop);
     void connectHand(Hand* hand);
     void disconnectHand();
 
