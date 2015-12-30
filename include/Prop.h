@@ -22,7 +22,7 @@ public:
     /** 
      * Get the string of the current state name
      */
-    const TCHAR* getStateName();
+    const char* getStateName();
     
     /**
      * The current count away from the next hand
@@ -60,6 +60,8 @@ public:
 
     void connectToAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
     void disconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
+
+    std::string toString();
 
 protected:
     bool decrementSiteswap();

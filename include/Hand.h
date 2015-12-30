@@ -20,7 +20,7 @@ public:
      /** 
      * Get the string of the current state name
      */
-    const TCHAR* getStateName();
+    const char* getStateName();
 
 
     void Pickup(Prop* prop);
@@ -35,9 +35,7 @@ public:
 
     void Collision(Prop* prop);
 
-#if defined(_DEBUG)
-    std::wstring toString();
-#endif // defined(_DEBUG)
+    std::string toString();
 
 protected:
 

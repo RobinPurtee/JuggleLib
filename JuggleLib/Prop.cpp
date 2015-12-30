@@ -38,7 +38,7 @@ namespace
         template <class FSM, class EVT, class State>
         void operator()(EVT const& evt, FSM& fsm, State& state)
         {
-            DebugOut(_T("PropStateMachine::catch_exit_action"));
+            DebugOut() << "PropStateMachine::catch_exit_action";
         }
     };
    
@@ -57,7 +57,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut(_T("PropStateMachine::dropped_entry"));
+            DebugOut() << "PropStateMachine::dropped_entry";
             fsm.get_attribute(drop_)(fsm.get_attribute(prop_));
         }
     };
@@ -78,7 +78,7 @@ namespace
         template <class FSM,class EVT,class State>
         void operator()(EVT const& evt ,FSM& fsm, State& state )
         {
-            DebugOut(_T("PropStateMachine::flight_entry_action"));
+            DebugOut() << "PropStateMachine::flight_entry_action";
         }
     };
 
@@ -87,7 +87,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut(_T("PropStateMachine::flight_exit_action"));
+            DebugOut() << "PropStateMachine::flight_exit_action";
         }
     };
 
@@ -148,11 +148,11 @@ namespace
     // the type for the state machine
 
     typedef msm::back::state_machine<prop_state_machine> Base;
-    const TCHAR* stateNames[] = {
-        TEXT("Dwell"),
-        TEXT("Flight"),
-        TEXT("Catch"),
-        TEXT("Dropped"),
+    const char* stateNames[] = {
+        "Dwell",
+        "Flight",
+        "Catch",
+        "Dropped",
     };
 
 }
@@ -199,7 +199,7 @@ Prop::State Prop::getState()
 /**
  *
  */
-const TCHAR* Prop::getStateName()
+const char* Prop::getStateName()
 {
     return  stateNames[(*(stateMachine_->current_state()))];
 }
@@ -330,8 +330,13 @@ void Prop::Toss(Throw& toss)
  */
 void Prop::Caught()
 {
-    if(nullptr != hand_)
-        DebugOut(_T("Prop::Catch(%d) Prop state: %s  Hand state: %s"), hand_->getId(), getStateName(), hand_->getStateName()); 
+
+#ifdef _DEBUG
+    if(nullptr != hand_){
+        DebugOut() << "Prop::Catch - " << toString() << "by: " << hand_->toString(); 
+    }
+
+#endif // _DEBUG
     if(!isDropped()){        
         stateMachine_->process_event(caughtEvent);
     }
@@ -374,6 +379,15 @@ void Prop::Tick()
         catch_(this);
     }
 }
+
+
+std::string Prop::toString()
+{
+    std::stringstream out;
+    out << "Prop id: " << id_ << " State: " << getStateName() << std::endl;
+    return out.str();
+}
+
 
 // Private methods
 
