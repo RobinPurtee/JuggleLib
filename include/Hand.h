@@ -20,7 +20,7 @@ public:
      /** 
      * Get the string of the current state name
      */
-    const TCHAR* getStateName();
+    const char* getStateName();
 
 
     void Pickup(Prop* prop);
@@ -30,11 +30,12 @@ public:
 
     bool isVacant();
 
-    virtual void Catch(Prop* prop);
+    void Catch(Prop* prop);
+    void Caught(Prop* prop);
 
     void Collision(Prop* prop);
 
-    void caught(Prop* prop);
+    std::string toString();
 
 protected:
 

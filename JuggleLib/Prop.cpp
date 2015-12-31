@@ -68,7 +68,7 @@ namespace
         template <class FSM, class EVT, class State>
         void operator()(EVT const& evt, FSM& fsm, State& state)
         {
-            DebugOut(_T("PropStateMachine::catch_exit_action"));
+            DebugOut() << "PropStateMachine::catch_exit_action";
         }
     };
    
@@ -87,7 +87,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut(_T("PropStateMachine::dropped_entry"));
+            DebugOut() << "PropStateMachine::dropped_entry";
             if(!fsm.get_attribute(dropped_).empty()){
                 fsm.get_attribute(dropped_)(fsm.get_attribute(prop_));
             }
@@ -106,13 +106,12 @@ namespace
     /* 
      *  The flight state and support methods
      */
-
     BOOST_MSM_EUML_ACTION(flight_entry_action)
     {
         template <class FSM,class EVT,class State>
         void operator()(EVT const& evt ,FSM& fsm, State& state )
         {
-            DebugOut(_T("PropStateMachine::flight_entry_action"));
+            DebugOut() << "PropStateMachine::flight_entry_action";
             Throw* destinationToss(fsm.get_attribute(Atoss));
             Throw* sourceToss(evt.get_attribute(Atoss));
             PropSlot slot(nullptr);
@@ -138,7 +137,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut(_T("PropStateMachine::flight_exit_action"));
+            DebugOut() << "PropStateMachine::flight_exit_action";
             if(!fsm.get_attribute(catch_).empty()){
                 fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
             }
@@ -196,9 +195,6 @@ namespace
             }
         }
     };
-
-
-
     /**
      *  Prop state machine transition table
      */
@@ -248,11 +244,11 @@ namespace
     // the type for the state machine
 
     typedef msm::back::state_machine<prop_state_machine> Base;
-    const TCHAR* stateNames[] = {
-        TEXT("Dwell"),
-        TEXT("Flight"),
-        TEXT("Catch"),
-        TEXT("Dropped"),
+    const char* stateNames[] = {
+        "Dwell",
+        "Flight",
+        "Catch",
+        "Dropped",
     };
 
 }
@@ -286,7 +282,6 @@ Prop::Prop(int id)
 /**
  *
  */
-
 Prop::~Prop(void)
 {
 }
@@ -294,18 +289,15 @@ Prop::~Prop(void)
 /**
  *
  */
-
 Prop::State Prop::getState()
 {
     return static_cast<Prop::State>((*(stateMachine_->current_state())));
 }
 
-
 /**
  *
  */
-
-const TCHAR* Prop::getStateName()
+const char* Prop::getStateName()
 {
     return  stateNames[(*(stateMachine_->current_state()))];
 }
@@ -313,7 +305,6 @@ const TCHAR* Prop::getStateName()
 /**
  *
  */
-
 bool Prop::isDropped()
 {
     return stateMachine_->is_flag_active<isDroppedFlag__helper>();
@@ -322,16 +313,15 @@ bool Prop::isDropped()
 /**
  *
  */
-
 bool Prop::isInFlight()
 {
-    return stateMachine_->is_flag_active<isInFlightFlag__helper>();
+    bool bRet = 0 < toss_.siteswap && stateMachine_->is_flag_active<isInFlightFlag__helper>();
+    return bRet;
 }
         
 /**
  *
  */
-
 int Prop::getCurrentSwap()
 {
     return toss_.siteswap;
@@ -340,8 +330,7 @@ int Prop::getCurrentSwap()
 /**
  *
  */
-
-void Prop::ConnectToToss(PropSlot slot)
+void Prop::connectToToss(PropSlot slot)
 {
     stateMachine_->get_attribute(tossed_).connect(slot);
 }
@@ -349,8 +338,7 @@ void Prop::ConnectToToss(PropSlot slot)
 /**
  *
  */
-
-void Prop::DisconnectFromToss(PropSlot slot)
+void Prop::disconnectFromToss(PropSlot slot)
 {
     stateMachine_->get_attribute(tossed_).disconnect(slot);
 }
@@ -358,8 +346,7 @@ void Prop::DisconnectFromToss(PropSlot slot)
 /**
  *
  */
-
-void Prop::ConnectToDrop(PropSlot slot)
+void Prop::connectToDrop(PropSlot slot)
 {
     stateMachine_->get_attribute(dropped_).connect(slot);
 }
@@ -367,18 +354,15 @@ void Prop::ConnectToDrop(PropSlot slot)
 /**
  *
  */
-
-void Prop::DisconnectFromDrop(PropSlot slot)
+void Prop::disconnectFromDrop(PropSlot slot)
 {
     stateMachine_->get_attribute(dropped_).disconnect(slot);
 }
 
-
 /**
  *
  */
-
-void Prop::ConnectToCatch(PropSlot slot)
+void Prop::connectToCatch(PropSlot slot)
 {
     stateMachine_->get_attribute(catch_).connect(slot);
 }
@@ -386,8 +370,7 @@ void Prop::ConnectToCatch(PropSlot slot)
 /**
  *
  */
-
-void Prop::DisconnectFromCatch(PropSlot slot)
+void Prop::disconnectFromCatch(PropSlot slot)
 {
     stateMachine_->get_attribute(catch_).disconnect(slot);
 }
@@ -395,30 +378,26 @@ void Prop::DisconnectFromCatch(PropSlot slot)
 /**
  *
  */
-
-void Prop::ConnectToAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot)
+void Prop::connectToAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot)
 {
-    ConnectToToss(tossSlot);
-    ConnectToDrop(dropSlot);
-    ConnectToCatch(propSlot);
+    connectToToss(tossSlot);
+    connectToDrop(dropSlot);
+    connectToCatch(propSlot);
 }
 
 /**
  *
  */
-
-void Prop::DisconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot)
+void Prop::disconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot)
 {
-    DisconnectFromToss(tossSlot);
-    DisconnectFromDrop(dropSlot);
-    DisconnectFromCatch(propSlot);
+    disconnectFromToss(tossSlot);
+    disconnectFromDrop(dropSlot);
+    disconnectFromCatch(propSlot);
 }
-
 
 /**
  *
  */
-
 bool Prop::isIdValid(int id)
 {
     return id == id_;
@@ -430,21 +409,27 @@ bool Prop::isIdValid(int id)
  * A sucessful toss can only be started if the prop has be caught and in the DWELL state
  */
 
-void Prop::Toss(Throw* toss)
+void Prop::Toss(Throw& toss)
 {
     assert(nullptr != toss);
     stateMachine_->process_event(StateMachine::tossEvent(toss));
 }
 
 
-/**
+
+/**                                                                                        
  *
  */
-
-void Prop::Catch(Hand* hand)
+void Prop::Caught()
 {
-    DebugOut(_T("Prop::Catch(%d) Prop state: %s  Hand state: %s"), hand->getId(), getStateName(), hand->getStateName()); 
-    if(State::DROPPED != getState()){
+
+#ifdef _DEBUG
+    if(nullptr != hand_){
+        DebugOut() << "Prop::Catch - " << toString() << "by: " << hand_->toString(); 
+    }
+
+#endif // _DEBUG
+    if(!isDropped()){        
         stateMachine_->process_event(caughtEvent(hand));
     }
 }
@@ -452,7 +437,6 @@ void Prop::Catch(Hand* hand)
 /**
  *
  */
-
 void Prop::Collision()
 {
     stateMachine_->process_event(StateMachine::collisionEvent(this));
@@ -461,7 +445,6 @@ void Prop::Collision()
 /**
  *
  */
-
 void Prop::Pickup(Hand* hand)
 {
     stateMachine_->process_event(pickupEvent(hand));
@@ -470,9 +453,35 @@ void Prop::Pickup(Hand* hand)
 /**
  *
  */
-
 void Prop::Tick()
 {
-    stateMachine_->process_event(StateMachine::tickEvent);
+    if(isDropped()){
+        return;
+    }
+    else if(decrementSiteswap()){
+        stateMachine_->process_event(catchEvent);
+        catch_(this);
+    }
+}
+
+
+std::string Prop::toString()
+{
+    std::stringstream out;
+    out << "Prop id: " << id_ << " State: " << getStateName() << std::endl;
+    return out.str();
+}
+
+
+// Private methods
+
+bool Prop::decrementSiteswap()
+{
+    bool bRet(0 == toss_.siteswap);
+    if(!bRet){
+        --toss_.siteswap;
+         bRet = (0 == toss_.siteswap);
+    }
+    return bRet; 
 }
 

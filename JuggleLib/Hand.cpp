@@ -4,6 +4,7 @@
 #include "Throw.h"
 #include "Prop.h"
 #include "common_state_machine.h"
+#include <sstream>
 
 
 namespace 
@@ -29,7 +30,7 @@ namespace
         template <class FSM, class EVT, class State>
         void operator()(EVT const& evt, FSM& fsm, State& state)
         {
-            DebugOut(_T("HandStateMachine::toss_entry_action"));
+            DebugOut() << "HandStateMachine::toss_entry_action";
             Throw* evtToss(evt.get_attribute(Atoss));
             if(nullptr != evtToss){
                 state.get_attribute(Atoss) = evtToss;
@@ -43,11 +44,10 @@ namespace
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            DebugOut(_T("HandStateMachine::release_action"));
+            DebugOut() << "HandStateMachine::release_action";
             Throw* toss(source.get_attribute(Atoss));
             std::deque<Prop*>& propQue(fsm.get_attribute(props_));
-            if(!propQue.empty())
-            {
+            if(!propQue.empty()){
                 Prop* prop(*propQue.begin());
                 if(nullptr != toss && nullptr != prop){
                     prop->Toss(toss);
@@ -73,7 +73,7 @@ namespace
         template <class FSM, class EVT, class State>
         void operator()(EVT const& evt, FSM& fsm, State& state )
         {
-            DebugOut(_T("HandStateMachine::catch_entry_action"));
+            DebugOut() << "HandStateMachine::catch_entry_action";
             Prop* prop(evt.get_attribute(Aprop));
             if(nullptr != prop){
                 state.get_attribute(Aprop) = prop;
@@ -86,7 +86,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut(_T("HandStateMachine::catch_exit_action"));
+            DebugOut() << "HandStateMachine::catch_exit_action";
             Prop* prop(state.get_attribute(Aprop));
             if(nullptr != prop && !prop->isDropped()){
                 prop->Catch(fsm.get_attribute(Ahand));
@@ -111,7 +111,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut(_T("HandStateMachine::vacant_entry_action"));
+            DebugOut() << "HandStateMachine::vacant_entry_action";
         }
     };
 
@@ -120,7 +120,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut(_T("HandStateMachine::vacant_entry_action"));
+            DebugOut() << "HandStateMachine::vacant_entry_action";
         }
     };
     BOOST_MSM_EUML_STATE(
@@ -140,7 +140,7 @@ namespace
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            DebugOut(_T("HandStateMachine::pickup_action"));
+            DebugOut() << "HandStateMachine::pickup_action";
             Prop* prop = evt.get_attribute(Aprop);
             if(nullptr != prop){
                 fsm.get_attribute(props_).push_back(prop);
@@ -215,11 +215,11 @@ namespace
 
     typedef msm::back::state_machine<hand_state_machine> Base;
 
-    const TCHAR* stateNames[] = {
-        TEXT("Vacant"),
-        TEXT("Dwell"),
-        TEXT("Toss"),
-        TEXT("Catch"),
+    const char* stateNames[] = {
+        "Vacant",
+        "Dwell",
+        "Toss",
+        "Catch",
     };
 
 }
@@ -258,6 +258,7 @@ int Hand::getId()
 {
     return stateMachine_->get_attribute(Aid);
 }
+
 /**
 *
 */
@@ -267,12 +268,11 @@ Hand::State Hand::getState()
     return (static_cast<Hand::State>(*(stateMachine_->current_state())));
 }
 
-
 /**
 *
 */
 
-const TCHAR* Hand::getStateName()
+const char* Hand::getStateName()
 {
     return  stateNames[*(stateMachine_->current_state())];
 }
@@ -298,26 +298,39 @@ void Hand::Release()
 
 void Hand::Catch(Prop* prop)
 {
+    DebugOut() << "Hand::Catch - " << std::endl << toString() << "Catching: " << prop->toString();
     assert(nullptr != prop);
-    DebugOut(_T("Hand::Catch(%d) in state: %s Hand state: %s") , prop->getId(), prop->getStateName(), getStateName());
-    stateMachine_->process_event(catchEvent(prop));
+        stateMachine_->process_event(catchEvent(prop));
+
+}
+
+void Hand::Caught(Prop* prop)
+{
+    DebugOut() << "Hand::Caught - " << std::endl << toString() << "Caught: " << prop->toString();
+    if(nullptr != prop && !prop->isDropped()){
+        stateMachine_->process_event(caughtEvent);
+        prop->Caught();
+        props_.push_front(prop);
+    }
 }
 
 void Hand::Collision(Prop* prop)
 {
     assert(nullptr != prop);
-    DebugOut(_T("Hand::Collision(%d) in state: %s Hand state: %s"), prop->getId(), prop->getStateName(), getStateName());
+    DebugOut() << "Hand::Collision - " << std::endl << toString() << "Collision with: " << prop->toString();
     stateMachine_->process_event(StateMachine::collisionEvent(prop));
 }
 
-void Hand::caught(Prop* prop)
+std::string Hand::toString()
 {
-    assert(nullptr != prop);
-    DebugOut(_T("Hand::caught(%d) in state: %s Hand state: %s"), prop->getId(), prop->getStateName(), getStateName());
-    if(!prop->isDropped()){
-        stateMachine_->process_event(caughtEvent);
+    std::stringstream out;
+    out << "Hand id: " << id_ << " State: " << getStateName() << std::endl;
+    for(Prop* p : props_){
+        out << "    " <<  p->toString() << std::endl;
     }
+    return out.str();
 }
+
 
 
 
