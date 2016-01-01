@@ -61,6 +61,10 @@ namespace
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
             DebugOut() << "PropStateMachine::catch_entry_action";
+            if(!fsm.get_attribute(catch_).empty()){
+                fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
+            }
+
         }
     };
     BOOST_MSM_EUML_ACTION(catch_exit_action)
@@ -103,15 +107,12 @@ namespace
         configure_ << isDroppedFlag_
     ), DROPPED)
  
-    /* 
-     *  The flight state and support methods
-     */
-    BOOST_MSM_EUML_ACTION(flight_entry_action)
+    BOOST_MSM_EUML_ACTION(toss_action)
     {
-        template <class FSM,class EVT,class State>
-        void operator()(EVT const& evt ,FSM& fsm, State& state )
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            DebugOut() << "PropStateMachine::flight_entry_action";
+            DebugOut() << "PropStateMachine::toss_action";
             Throw* destinationToss(fsm.get_attribute(Atoss));
             Throw* sourceToss(evt.get_attribute(Atoss));
             PropSlot slot(nullptr);
@@ -132,15 +133,25 @@ namespace
         }
     };
 
+
+    /* 
+     *  The flight state and support methods
+     */
+    BOOST_MSM_EUML_ACTION(flight_entry_action)
+    {
+        template <class FSM,class EVT,class State>
+        void operator()(EVT const& evt ,FSM& fsm, State& state )
+        {
+            DebugOut() << "PropStateMachine::flight_entry_action";
+        }
+    };
+
     BOOST_MSM_EUML_ACTION(flight_exit_action)
     {
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
             DebugOut() << "PropStateMachine::flight_exit_action";
-            if(!fsm.get_attribute(catch_).empty()){
-                fsm.get_attribute(catch_)(fsm.get_attribute(prop_));
-            }
         }
     };
 
@@ -149,14 +160,9 @@ namespace
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            DebugOut(_T("PropStateMachine::tick_action"));
+            DebugOut() << "PropStateMachine::tick_action";
             Throw* toss(fsm.get_attribute(Atoss));
-            if(nullptr != toss){
-                if(0 < toss->siteswap){
-                    --toss->siteswap;
-                }
-            }
-            
+            --toss->siteswap;            
         }
     };
 
@@ -164,7 +170,7 @@ namespace
     (
         flight_entry_action,
         flight_exit_action,
-        attributes_ << Atoss ,
+        attributes_ << no_attributes_ ,
         configure_ << isInFlightFlag_
     ), FLIGHT)
 
@@ -189,6 +195,7 @@ namespace
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
+            DebugOut() << "PropStateMachine::pickup_action";
             Hand* hand(evt.get_attribute(Ahand));
             if(nullptr != hand){
                 connectHandToFsm(fsm, hand);
@@ -201,15 +208,18 @@ namespace
 
     BOOST_MSM_EUML_TRANSITION_TABLE(
     (
-        DWELL + tossEvent                       == FLIGHT,
-        FLIGHT + tickEvent / tick_action,
-        FLIGHT [tick_guard]                     == CATCH,
-        CATCH + caughtEvent                     == DWELL,
-        CATCH + tickEvent                       == DROPPED,
-        DROPPED + pickupEvent / pickup_action   == DWELL,
-        DWELL + collisionEvent                  == DROPPED,
-        FLIGHT + collisionEvent                 == DROPPED,
-        CATCH + collisionEvent                  == DROPPED,
+        DWELL == CATCH + caughtEvent                     ,
+        DROPPED + pickupEvent / pickup_action == DWELL  ,
+        
+        FLIGHT == DWELL + tossEvent / toss_action        ,
+        FLIGHT + tickEvent [!tick_guard] / tick_action,
+
+        CATCH == FLIGHT [tick_guard]                     ,
+
+        DROPPED == CATCH + tickEvent [tick_guard]        ,
+        DROPPED == DWELL + collisionEvent                ,
+        DROPPED == FLIGHT + collisionEvent               ,
+        DROPPED == CATCH + collisionEvent                ,
         DROPPED + collisionEvent
     ), prop_transition_table)
 
@@ -245,10 +255,10 @@ namespace
 
     typedef msm::back::state_machine<prop_state_machine> Base;
     const char* stateNames[] = {
-        "Dwell",
-        "Flight",
         "Catch",
         "Dropped",
+        "Dwell",
+        "Flight",
     };
 
 }
@@ -411,8 +421,7 @@ bool Prop::isIdValid(int id)
 
 void Prop::Toss(Throw& toss)
 {
-    assert(nullptr != toss);
-    stateMachine_->process_event(StateMachine::tossEvent(toss));
+    stateMachine_->process_event(StateMachine::tossEvent(&toss));
 }
 
 
@@ -422,12 +431,14 @@ void Prop::Toss(Throw& toss)
  */
 void Prop::Caught()
 {
-
 #ifdef _DEBUG
-    if(nullptr != hand_){
-        DebugOut() << "Prop::Catch - " << toString() << "by: " << hand_->toString(); 
+    Hand* hand =  stateMachine_->get_attribute(Ahand);
+    if(nullptr != hand){
+        DebugOut() << "Prop::Caught - " << toString() << "by: " << hand->toString(); 
     }
-
+    else{
+        DebugOut() << "Prop::Caught - " << toString() << "by: no hand"; 
+    }
 #endif // _DEBUG
     if(!isDropped()){        
         stateMachine_->process_event(caughtEvent(hand));
@@ -455,20 +466,17 @@ void Prop::Pickup(Hand* hand)
  */
 void Prop::Tick()
 {
-    if(isDropped()){
-        return;
+    if(!isDropped()){
+        stateMachine_->process_event(tickEvent);
     }
-    else if(decrementSiteswap()){
-        stateMachine_->process_event(catchEvent);
-        catch_(this);
-    }
+
 }
 
 
 std::string Prop::toString()
 {
     std::stringstream out;
-    out << "Prop id: " << id_ << " State: " << getStateName() << std::endl;
+    out << "Prop id: " << std::hex << id_ << " State: " << getStateName() << "(" << (*(stateMachine_->current_state())) << ")";
     return out.str();
 }
 

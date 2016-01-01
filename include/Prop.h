@@ -15,7 +15,12 @@ public:
     //Properties
     int getId()         {return id_;}
 
-    enum class State:int {DWELL = 0, FLIGHT, CATCH, DROPPED};
+    enum class State:int {
+        DWELL = 2, 
+        FLIGHT = 3, 
+        CATCH = 0, 
+        DROPPED = 1
+    };
 
     Prop::State getState();
 

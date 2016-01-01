@@ -50,7 +50,7 @@ namespace
             if(!propQue.empty()){
                 Prop* prop(*propQue.begin());
                 if(nullptr != toss && nullptr != prop){
-                    prop->Toss(toss);
+                    prop->Toss(*toss);
                 }
                 propQue.pop_front();
             }
@@ -89,7 +89,7 @@ namespace
             DebugOut() << "HandStateMachine::catch_exit_action";
             Prop* prop(state.get_attribute(Aprop));
             if(nullptr != prop && !prop->isDropped()){
-                prop->Catch(fsm.get_attribute(Ahand));
+                prop->Caught();
                 fsm.get_attribute(props_).push_front(prop);
             }
         }
@@ -206,7 +206,7 @@ namespace
             init_ << VACANT,            // The initial State
             no_action,                  // The startup action
             no_action,                  // The exit action
-            attributes_ << Aid << props_ << Ahand, // the attributes
+            attributes_ << props_ << Ahand, // the attributes
             configure_ << no_configure_, // configuration parameters (flags and funcitons)
             invalid_state_transistion    // default action if transition is invalid
         ), hand_state_machine );
@@ -226,17 +226,16 @@ namespace
 
 struct Hand::HandStateMachine : public Base
 {
-    HandStateMachine(int id, Hand* hand)
+    HandStateMachine(Hand* hand)
         : Base()
     {
-        get_attribute(StateMachine::Aid) = id;
         get_attribute(StateMachine::Ahand) = hand;
     }
 };
 
 
 Hand::Hand(int id)
-    : stateMachine_(new HandStateMachine(id, this))
+    : stateMachine_(new HandStateMachine(this))
 {
 }
 
@@ -256,7 +255,7 @@ bool Hand::isVacant()
 
 int Hand::getId()
 {
-    return stateMachine_->get_attribute(Aid);
+    return id_;
 }
 
 /**
@@ -310,7 +309,6 @@ void Hand::Caught(Prop* prop)
     if(nullptr != prop && !prop->isDropped()){
         stateMachine_->process_event(caughtEvent);
         prop->Caught();
-        props_.push_front(prop);
     }
 }
 
@@ -325,7 +323,8 @@ std::string Hand::toString()
 {
     std::stringstream out;
     out << "Hand id: " << id_ << " State: " << getStateName() << std::endl;
-    for(Prop* p : props_){
+    std::deque<Prop*>& props(stateMachine_->get_attribute(props_));
+    for(Prop* p : props){
         out << "    " <<  p->toString() << std::endl;
     }
     return out.str();

@@ -40,7 +40,7 @@ public:
 protected:
 
 private:
-
+    int id_;
 
     struct HandStateMachine;
     std::shared_ptr<HandStateMachine> stateMachine_;

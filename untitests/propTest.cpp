@@ -63,11 +63,13 @@ namespace untitests
             int siteswap(1);
             Throw pass(siteswap, nullptr);
 
+            DebugOut() << "propTest::run_til_catch: Initial state: " << prop.toString(); 
             prop.Pickup(nullptr);
             DebugOut() << "propTest::run_til_catch: After Pickup state: " << prop.toString(); 
+            Assert::IsTrue(Prop::State::DWELL == prop.getState(), L"The state is not DWELL after Pickup");
             prop.Toss(pass);
             DebugOut() << "propTest::run_til_catch: After Toss state: " << prop.toString(); 
-            Assert::IsTrue(responder.has_tossed_);
+            Assert::IsTrue(responder.has_tossed_, L"");
             while(0 < siteswap)
             {
                 Assert::IsFalse(responder.has_caught_, L"The Prop trigger the catch notification early");
