@@ -73,9 +73,9 @@ namespace
         template <class FSM, class EVT, class State>
         void operator()(EVT const& evt, FSM& fsm, State& state )
         {
-            DebugOut() << "HandStateMachine::catch_entry_action";
             Prop* prop(evt.get_attribute(Aprop));
             if(nullptr != prop){
+                DebugOut() << "HandStateMachine::catch_entry_action - " << prop->toString();
                 state.get_attribute(Aprop) = prop;
             }
         }
@@ -87,13 +87,23 @@ namespace
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
             DebugOut() << "HandStateMachine::catch_exit_action";
-            Prop* prop(state.get_attribute(Aprop));
+        }
+    };
+
+    BOOST_MSM_EUML_ACTION(caught_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            Prop* prop(source.get_attribute(Aprop));
             if(nullptr != prop && !prop->isDropped()){
+                DebugOut() << "HandStateMachine::caugh_action - " << prop->toString();
                 prop->Caught();
                 fsm.get_attribute(props_).push_front(prop);
             }
         }
     };
+
 
     BOOST_MSM_EUML_STATE(
     (
@@ -120,7 +130,7 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut() << "HandStateMachine::vacant_entry_action";
+            DebugOut() << "HandStateMachine::vacant_exit_action";
         }
     };
     BOOST_MSM_EUML_STATE(
@@ -176,7 +186,7 @@ namespace
                 TOSS [vacant_guard]                     == VACANT,
                 VACANT + catchEvent                     == CATCH,
                 VACANT [!vacant_guard]                  == DWELL,
-                CATCH + caughtEvent                     == DWELL,
+                CATCH + caughtEvent / caught_action     == DWELL,
                 CATCH + collisionEvent                  == VACANT,
                 //CATCH + collisionEvent  [!vacant_guard] == DWELL,
                 DWELL + pickupEvent / pickup_action             //,
@@ -286,12 +296,14 @@ void Hand::Pickup(Prop* prop)
 
 void Hand::Toss(Throw* toss)
 {
+    DebugOut() << "Hand::Toss - " << std::endl << toString();
     assert(nullptr != toss);
     stateMachine_->process_event(StateMachine::tossEvent(toss));
 }
 
 void Hand::Release()
 {
+    DebugOut() << "Hand::Release - " << std::endl << toString() << "Releasing: " << (*stateMachine_->get_attribute(props_).begin())->toString();
     stateMachine_->process_event(releaseEvent);
 }
 
@@ -299,7 +311,7 @@ void Hand::Catch(Prop* prop)
 {
     DebugOut() << "Hand::Catch - " << std::endl << toString() << "Catching: " << prop->toString();
     assert(nullptr != prop);
-        stateMachine_->process_event(catchEvent(prop));
+    stateMachine_->process_event(catchEvent(prop));
 
 }
 
@@ -308,7 +320,6 @@ void Hand::Caught(Prop* prop)
     DebugOut() << "Hand::Caught - " << std::endl << toString() << "Caught: " << prop->toString();
     if(nullptr != prop && !prop->isDropped()){
         stateMachine_->process_event(caughtEvent);
-        prop->Caught();
     }
 }
 

@@ -232,7 +232,7 @@ namespace
         template <class FSM,class Event>
         void operator()(Event const& e,FSM& fsm,int state)
         {
-            DebugOut() << "PropStateMachine::invald_state_transistion: by event: " << typeid(e).name() << "with PropMachine state: " << state; 
+            DebugOut() << "PropStateMachine::invald_state_transistion: by event: " << typeid(e).name() << " with PropMachine state: " << fsm.get_attribute(prop_)->getStateName(); 
             fsm.process_event(collisionEvent);
         }
     };
@@ -423,8 +423,6 @@ void Prop::Toss(Throw& toss)
 {
     stateMachine_->process_event(StateMachine::tossEvent(&toss));
 }
-
-
 
 /**                                                                                        
  *
