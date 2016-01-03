@@ -37,6 +37,7 @@ public:
      */
     bool isDropped();
     bool isInFlight();
+    bool isInPlay();
 
     void Toss(Throw& toss);
 
@@ -66,7 +67,8 @@ public:
 protected:
     bool decrementSiteswap();
 
-
+    int getStateValue();
+    int getSubStateValue();
     bool isIdValid(int id);
 
 
