@@ -53,7 +53,7 @@ namespace untitests
             Assert::IsTrue(Hand::State::CATCH == hand.getState(), L"The Hand is not in the CATCH state");
             Assert::IsFalse(prop.isDropped(), L"The prop has be dropped when it shoud be in dwell");
             
-            hand.Caught(&prop);
+            hand.Caught();
             DebugOut() << "after prop caught \n" << hand.toString();
             Assert::IsFalse(hand.isVacant(), L"The hand is vacant when it should have a prop in it DWELL");
             Assert::IsFalse(prop.isInFlight(), L"The prop is in flight when it should be in dwell");
@@ -71,6 +71,7 @@ namespace untitests
             Prop prop(0);
             Throw toss(1, &hand);
 
+            DebugOut() << "initial \n" << hand.toString();
             hand.Pickup(&prop);
             DebugOut() << "after pickup \n" << hand.toString();
             hand.Toss(&toss);
@@ -86,7 +87,7 @@ namespace untitests
             prop.Tick();
             DebugOut() << "after prop dropped \n" << hand.toString();
             Assert::IsTrue(prop.isDropped(), L"The Prop is not in Dropped state");
-            hand.Caught(&prop);
+            hand.Caught();
             DebugOut() << "after hand caught \n" << hand.toString() << prop.toString();
             Assert::IsTrue(hand.isVacant(), L"The hand still thinks it has caught the club");
  

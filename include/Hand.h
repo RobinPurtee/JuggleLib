@@ -31,20 +31,20 @@ public:
     bool isVacant();
 
     void Catch(Prop* prop);
-    void Caught(Prop* prop);
+    void Caught();
 
     void Collision(Prop* prop);
 
     std::string toString();
 
 protected:
+    Prop* propCatching_;
 
 private:
 
     std::deque<Prop*> props_;
     Throw* toss_;
     int id_;
-    Prop* propCatching_;
 
     struct HandStateMachine;
     std::shared_ptr<HandStateMachine> stateMachine_;

@@ -117,9 +117,9 @@ namespace
         invalid_state_transistion
     ), in_play_state_machine)
 
-    typedef msm::back::state_machine<in_play_state_machine> in_play;
+    typedef msm::back::state_machine<in_play_state_machine> in_play_type;
 
-    static in_play  IN_PLAY;
+    static in_play_type  IN_PLAY;
 
 
     /* 
@@ -218,7 +218,7 @@ struct Prop::PropStateMachine : public Base
     {
         int ret(*(current_state()));
         if(isInPlay()){
-            ret += (*(get_state<in_play&>().current_state()));
+            ret += (*(get_state<in_play_type&>().current_state()));
         }
         return ret;
     }
