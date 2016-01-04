@@ -15,7 +15,12 @@ public:
     //Properties
     int getId()         {return id_;}
 
-    enum class State:int {DWELL = 0, FLIGHT, CATCH, DROPPED};
+    enum class State:int {
+        DROPPED = 0,
+        DWELL = 1, 
+        FLIGHT, 
+        CATCH, 
+    };
 
     Prop::State getState();
 
@@ -48,8 +53,7 @@ public:
     void Pickup(Hand* hand);
 
     void Tick();
-
-    
+     
     void connectToToss(PropSlot slot);
     void disconnectFromToss(PropSlot slot);
 
@@ -66,10 +70,6 @@ public:
 
 protected:
     bool decrementSiteswap();
-
-    int getStateValue();
-    int getSubStateValue();
-    bool isIdValid(int id);
 
 
     

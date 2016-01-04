@@ -98,10 +98,10 @@ namespace
     // IN_PLAY transition table
     BOOST_MSM_EUML_TRANSITION_TABLE(
     (
-        DWELL + tossEvent                       == FLIGHT,
+        FLIGHT == DWELL + tossEvent,
         DWELL + pickupEvent,
-        FLIGHT + catchEvent                     == CATCH,
-        CATCH + caughtEvent                     == DWELL,
+        CATCH == FLIGHT + catchEvent,
+        DWELL == CATCH + caughtEvent,
         CATCH + tickEvent 
     ), prop_in_play_transition_table)
 
@@ -149,8 +149,8 @@ namespace
     // prop state machine
     BOOST_MSM_EUML_TRANSITION_TABLE(
     (
-        DROPPED == IN_PLAY + collisionEvent,
-        IN_PLAY == DROPPED + pickupEvent
+        IN_PLAY == DROPPED + pickupEvent,
+        DROPPED == IN_PLAY + collisionEvent
     ), prop_transition_table)
 
 
@@ -174,15 +174,15 @@ namespace
 
 
     const char* stateNames[] = {
+        "Dropped",
         "Dwell",
         "Flight",
         "Catch",
-        "Dropped",
     };
 
     const char* propStateNames[] = {
-        "In Play",
         "Dropped",        
+        "In Play",
     };
 
 }
@@ -198,10 +198,39 @@ struct Prop::PropStateMachine : public Base
         get_attribute(drop_) = drop;
 
     }
+    // is the current state Dropped
+    bool isDropped()
+    {
+        return is_flag_active<isDroppedFlag__helper>();
+    }
+    // is current state Flight
+    bool isInFlight()
+    {
+        return  is_flag_active<isInFlightFlag__helper>();
+    }
+    // is the current state In Play 
+    bool isInPlay()
+    {
+        return is_flag_active<isInPlayFlag__helper>();
+    }
+    // Get the current state value
+    int getStateValue()
+    {
+        int ret(*(current_state()));
+        if(isInPlay()){
+            ret += (*(get_state<in_play&>().current_state()));
+        }
+        return ret;
+    }
+    
+    const char* getStateName()
+    {
+        return stateNames[getStateValue()]; 
+    }
 };
 
 /**
- *
+ *   constructor
  */
 Prop::Prop(int id)
 :   stateMachine_(new Prop::PropStateMachine(this, std::bind(&Prop::dropped, this, std::placeholders::_1)) )
@@ -210,9 +239,8 @@ Prop::Prop(int id)
 {
 }
 
-
 /**
- *
+ *  destructor
  */
 Prop::~Prop(void)
 {
@@ -223,11 +251,7 @@ Prop::~Prop(void)
  */
 Prop::State Prop::getState()
 {
-    int ret(getStateValue());
-    if(isInPlay()){
-        ret = getSubStateValue();
-    }
-    return static_cast<Prop::State>(ret);
+    return static_cast<Prop::State>(stateMachine_->getStateValue());
 }
 
 /**
@@ -235,39 +259,25 @@ Prop::State Prop::getState()
  */
 const char* Prop::getStateName()
 {
-    const char* ret(propStateNames[getStateValue()]);
-    if(isInPlay()){
-        ret = stateNames[getSubStateValue()];
-    }
-    return ret; 
+    return stateMachine_->getStateName(); 
 }
-
-/**
- *
- */
+// test for Dropped state
 bool Prop::isDropped()
 {
-    return stateMachine_->is_flag_active<isDroppedFlag__helper>();
+    return stateMachine_->isDropped();
 }
-
-/**
- *
- */
+// test for InFlight state
 bool Prop::isInFlight()
 {
-    bool bRet = 0 < toss_.siteswap && stateMachine_->is_flag_active<isInFlightFlag__helper>();
+    bool bRet = 0 < toss_.siteswap && stateMachine_->isInFlight();
     return bRet;
 }
-   
+// test for InPlay state   
 bool Prop::isInPlay()
 {
-    return stateMachine_->is_flag_active<isInPlayFlag__helper>();
+    return stateMachine_->isInPlay();
 }
-
-
-/**
- *
- */
+// Get the current siteswap value (0 mean not in flight
 int Prop::getCurrentSwap()
 {
     return toss_.siteswap;
@@ -342,19 +352,10 @@ void Prop::disconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot prop
 }
 
 /**
- *
- */
-bool Prop::isIdValid(int id)
-{
-    return id == id_;
-}
-
-/**
  * Start accelorating the prop
  * @remarks 
  * A sucessful toss can only be started if the prop has be caught and in the DWELL state
  */
-
 void Prop::Toss(Throw& toss)
 {
     toss_ = toss;
@@ -368,20 +369,17 @@ void Prop::Toss(Throw& toss)
     }
 }
 
-
 /**                                                                                        
  *
  */
 void Prop::Caught()
 {
-
 #ifdef _DEBUG
     if(nullptr != hand_){
         DebugOut() << "Prop::Catch - " << toString() << "by: " << hand_->toString(); 
     }
-
 #endif // _DEBUG
-    if(!isDropped()){        
+    if(!stateMachine_->isDropped()){        
         stateMachine_->process_event(caughtEvent);
     }
 }
@@ -401,7 +399,7 @@ void Prop::Collision()
  */
 void Prop::Pickup(Hand* hand)
 {
-    if(isDropped()){
+    if(stateMachine_->isDropped()){
         connectHand(hand);
         stateMachine_->process_event(pickupEvent);
     }
@@ -415,7 +413,7 @@ void Prop::Pickup(Hand* hand)
  */
 void Prop::Tick()
 {
-    if(isDropped()){
+    if(stateMachine_->isDropped()){
         return;
     }
     else if(decrementSiteswap()){
@@ -423,15 +421,13 @@ void Prop::Tick()
         catch_(this);
     }
 }
-
-
+// get the current status string
 std::string Prop::toString()
 {
     std::stringstream out;
-    out << "Prop id: " << id_ << " State(" << getStateValue() << "): " << getStateName() << std::endl;
+    out << "Prop id: " << id_ << " State(" << stateMachine_->getStateValue() << "): " << getStateName() << std::endl;
     return out.str();
 }
-
 
 // Private methods
 
@@ -444,7 +440,7 @@ bool Prop::decrementSiteswap()
     }
     return bRet; 
 }
-
+// Slot for the dropped state signal from the state machine
 void Prop::dropped(Prop* prop)
 {
     if(this == prop){
@@ -453,16 +449,7 @@ void Prop::dropped(Prop* prop)
     }
 
 }
-
-int Prop::getStateValue(){
-    return (*(stateMachine_->current_state())); 
-}
-int Prop::getSubStateValue(){
-    return (*(stateMachine_->get_state<in_play&>().current_state())); 
-}
-
-
-
+// Connect the state signals to the hand
 void Prop::connectHand(Hand* hand)
 { 
     if(nullptr == hand){
@@ -479,7 +466,7 @@ void Prop::connectHand(Hand* hand)
     slot = (std::bind(&Hand::Collision, hand_, std::placeholders::_1));
     connectToDrop(slot);
 }
-
+// Disconnect the state signals from the hand
 void Prop::disconnectHand()
 {
     if(nullptr == hand_){
