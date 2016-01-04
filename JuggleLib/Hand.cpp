@@ -246,6 +246,7 @@ struct Hand::HandStateMachine : public Base
 
 Hand::Hand(int id)
     : stateMachine_(new HandStateMachine(this))
+    , id_(id)
 {
 }
 
@@ -310,8 +311,9 @@ void Hand::Release()
 void Hand::Catch(Prop* prop)
 {
     DebugOut() << "Hand::Catch - " << std::endl << toString() << "Catching: " << prop->toString();
-    assert(nullptr != prop);
-    stateMachine_->process_event(catchEvent(prop));
+    if(nullptr != prop){
+        stateMachine_->process_event(catchEvent(prop));
+    }
 
 }
 

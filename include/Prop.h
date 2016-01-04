@@ -42,6 +42,7 @@ public:
      */
     bool isDropped();
     bool isInFlight();
+    bool isInPlay();
 
     void Toss(Throw& toss);
 
@@ -71,16 +72,15 @@ public:
 protected:
     bool decrementSiteswap();
 
-
-    bool isIdValid(int id);
+    int getStateValue();
+    int getSubStateValue();
 
 
     
 private:
     Throw toss_;
-
-
     int id_;
+
     struct PropStateMachine;
     std::shared_ptr<PropStateMachine> stateMachine_;
 
