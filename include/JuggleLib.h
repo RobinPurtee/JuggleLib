@@ -10,6 +10,7 @@ typedef boost::signals2::signal<void(Prop*)> PropPublisher;
 
 typedef std::function<void(int)> IdSlot;
 typedef std::function<void(Prop*)> PropSlot;
+typedef std::function<void()> ActionSlot;
 
 #include "Prop.h"
 #include "Throw.h"

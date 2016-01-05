@@ -34,6 +34,7 @@ public:
     void Caught();
 
     void Collision(Prop* prop);
+    void Collect();
 
     std::string toString();
 
