@@ -26,6 +26,7 @@ namespace
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropSlot, pickupSlot_)
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, releaseSlot_)
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, caughtSlot_)
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, dropSlot_)
 
 
 
@@ -166,6 +167,16 @@ namespace
         }
     };
 
+    BOOST_MSM_EUML_ACTION(drop_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            DebugOut() << "HandStateMachine::drop_action";
+            fsm.get_attribute( dropSlot_)();
+        }
+    };
+
 
     /**
     *  test if the hand is actually vacant
@@ -191,7 +202,7 @@ namespace
             VACANT == TOSS + releaseEvent / release_action,
             CATCH == VACANT + catchEvent,
             DWELL == VACANT [!is_vacant],
-            DWELL == CATCH + caughtEvent,
+            DWELL == CATCH + caughtEvent / caught_action,
             DWELL + pickupEvent [is_flag_(isCollectingFlag)] / pickup_action,
             DWELL + catchEvent [is_flag_(isCollectingFlag)] / pickup_action,
             VACANT == CATCH + collisionEvent,
@@ -223,7 +234,11 @@ namespace
             init_ << VACANT << COLLECTING,            // The initial State
             no_action,                  // The startup action
             no_action,                  // The exit action
-            attributes_  << Ahand << pickupSlot_ <<  releaseSlot_ << caughtSlot_, // the attributes
+            attributes_     << Ahand 
+                            << pickupSlot_ 
+                            << releaseSlot_ 
+                            << caughtSlot_ 
+                            << dropSlot_, // the attributes
             configure_ << no_configure_, // configuration parameters (flags and funcitons)
             invalid_state_transistion    // default action if transition is invalid
         ), hand_state_machine );
@@ -249,6 +264,8 @@ struct Hand::HandStateMachine : public Base
         get_attribute(StateMachine::Ahand) = hand;
         get_attribute(pickupSlot_) = std::bind(&Hand::HandStateMachine::pickupAction, this, std::placeholders::_1);
         get_attribute(releaseSlot_) = std::bind(&Hand::HandStateMachine::releaseAction, this);        
+        get_attribute(caughtSlot_) = std::bind(&Hand::HandStateMachine::caughtAction, this);        
+        get_attribute(dropSlot_) = std::bind(&Hand::HandStateMachine::dropAction, this);        
     }
 
     /// is the current state machine juggling
@@ -302,6 +319,23 @@ struct Hand::HandStateMachine : public Base
         Hand* hand(get_attribute(Ahand));
         hand->propCatching_->Caught();
         hand->props_.push_front(hand->propCatching_);
+    }
+
+    void dropAction()
+    {
+        Hand* hand(get_attribute(Ahand));
+        for(Prop* p : hand->props_){
+            p->Collision();
+        }
+        collisionAction(nullptr);
+    }
+
+    void collisionAction(Prop*)
+    {
+        Hand* hand(get_attribute(Ahand));
+        hand->props_.clear();
+        hand->toss_ = nullptr;
+        process_event(collectEvent);;
     }
 
 };
@@ -359,21 +393,24 @@ void Hand::Release()
 /// PropSlot for the Catch signal coming from the in coming Prop
 void Hand::Catch(Prop* prop)
 {
-    DebugOut() << "Hand::Catch - " << std::endl << toString() << "Catching: " << prop->toString();
+    DebugOut() << "Hand::Catch;" << std::endl << toString() << "Catching: " << prop->toString();
     if(nullptr != prop){
         propCatching_ = prop;
         stateMachine_->process_event(catchEvent(prop));
     }
+    DebugOut() << std::endl << toString() << "Catching: " << prop->toString();
+
 }
 /// Use to signal back to the prop that it has been caught 
 /// and add the Prop to the front of the que
 void Hand::Caught()
 {
     if(nullptr != propCatching_){
-        DebugOut() << "Hand::Caught - " << std::endl << toString() << "Caught: " << propCatching_->toString();
+        DebugOut() << "Hand::Caught;";
         if(!propCatching_->isDropped()){
             stateMachine_->process_event(caughtEvent);
         }
+        DebugOut() << std::endl << toString() << "Caught: " << propCatching_->toString(); 
     }
     else{
         DebugOut() << "Hand::Caught - " << std::endl << toString() << "Called but the hand has no Prop to catch";
@@ -387,9 +424,6 @@ void Hand::Collision(Prop* prop)
     assert(nullptr != prop);
     DebugOut() << "Hand::Collision - " << std::endl << toString() << "Collision with: " << prop->toString();
     stateMachine_->process_event(StateMachine::collisionEvent(prop));
-    props_.clear();
-    toss_ = nullptr;
-    Collect();
 }
 /// set the hand into collection mode
 void Hand::Collect()
@@ -411,7 +445,7 @@ std::string Hand::toString()
     out << " State(" << stateMachine_->getState() << "): " << getStateName();
     out << std::endl;
     for(Prop* p : props_){
-        out << "    " <<  p->toString() << std::endl;
+        out << "    " <<  p->toString();
     }
     return out.str();
 }

@@ -74,7 +74,6 @@ protected:
 
     
 private:
-    void dropped(Prop* prop);
     void connectHand(Hand* hand);
     void disconnectHand();
 

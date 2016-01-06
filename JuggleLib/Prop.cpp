@@ -11,7 +11,7 @@ namespace
 {
     using namespace StateMachine;
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Prop*, prop_);
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropSlot, drop_);
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, drop_);
 
     BOOST_MSM_EUML_FLAG(isDroppedFlag_);
     BOOST_MSM_EUML_FLAG(isInPlayFlag_);
@@ -30,7 +30,7 @@ namespace
         template <class FSM,class Event>
         void operator()(Event const& e,FSM& fsm,int state)
         {
-            DebugOut() << "PropStateMachine::invald_state_transistion: by event: " << typeid(e).name() << "with PropMachine state: " << state; 
+            DebugOut() << "PropStateMachine::invald_state_transistion: by event: " << typeid(e).name() << "with PropMachine state: " << stateNames[state]; 
             fsm.process_event(collisionEvent);
         }
     };
@@ -56,7 +56,6 @@ namespace
             DebugOut() << "PropStateMachine::catch_exit_action";
         }
     };
-   
     BOOST_MSM_EUML_STATE(
     (
         catch_entry_action, 
@@ -74,7 +73,6 @@ namespace
             DebugOut() << "PropStateMachine::flight_entry_action";
         }
     };
-
     BOOST_MSM_EUML_ACTION(flight_exit_action)
     {
         template <class Event, class FSM, class STATE>
@@ -132,10 +130,9 @@ namespace
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
             DebugOut() << "PropStateMachine::dropped_entry";
-            fsm.get_attribute(drop_)(fsm.get_attribute(prop_));
+            fsm.get_attribute(drop_)();
         }
     };
-
     BOOST_MSM_EUML_STATE(
     (
         dropped_entry,
@@ -192,10 +189,10 @@ namespace
  */
 struct Prop::PropStateMachine : public Base
 {
-    PropStateMachine(Prop* prop, PropSlot drop)
+    PropStateMachine(Prop* prop)
     {
         get_attribute(prop_) = prop;
-        get_attribute(drop_) = drop;
+        get_attribute(drop_) = std::bind(&Prop::PropStateMachine::dropped, this);
 
     }
     // is the current state Dropped
@@ -227,13 +224,20 @@ struct Prop::PropStateMachine : public Base
     {
         return stateNames[getStateValue()]; 
     }
+    // Slot for the dropped state signal from the state machine
+    void dropped()
+    {
+        Prop* prop(get_attribute(prop_));
+        prop->dropped_(prop);
+        prop->disconnectHand();
+    }
 };
 
 /**
  *   constructor
  */
 Prop::Prop(int id)
-:   stateMachine_(new Prop::PropStateMachine(this, std::bind(&Prop::dropped, this, std::placeholders::_1)) )
+:   stateMachine_(new Prop::PropStateMachine(this))
 ,   id_(id)
 ,   hand_(nullptr)
 {
@@ -439,15 +443,6 @@ bool Prop::decrementSiteswap()
          bRet = (0 == toss_.siteswap);
     }
     return bRet; 
-}
-// Slot for the dropped state signal from the state machine
-void Prop::dropped(Prop* prop)
-{
-    if(this == prop){
-        dropped_(this);
-        disconnectHand();
-    }
-
 }
 // Connect the state signals to the hand
 void Prop::connectHand(Hand* hand)
