@@ -13,6 +13,7 @@
     <ClCompile Include="Trajectory.cpp" />
     <ClCompile Include="Hand.cpp" />
     <ClCompile Include="DropException.cpp" />
+    <ClCompile Include="Throw.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

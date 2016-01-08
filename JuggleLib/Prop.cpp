@@ -284,18 +284,13 @@ bool Prop::isDropped()
 // test for InFlight state
 bool Prop::isInFlight()
 {
-    bool bRet = 0 < toss_.siteswap && stateMachine_->isInFlight();
+    bool bRet = !toss_.isZero() && stateMachine_->isInFlight();
     return bRet;
 }
 // test for InPlay state   
 bool Prop::isInPlay()
 {
     return stateMachine_->isInPlay();
-}
-// Get the current siteswap value (0 mean not in flight
-int Prop::getCurrentSwap()
-{
-    return toss_.siteswap;
 }
 
 /**
@@ -375,8 +370,8 @@ void Prop::Toss(Throw& toss)
 {
     toss_ = toss;
     disconnectHand();
-    if(nullptr != toss.destination){
-        connectHand(toss.destination);
+    if(nullptr != toss.getDestination()){
+        connectHand(toss.getDestination());
     }
     stateMachine_->process_event(StateMachine::tossEvent);
     if(!tossed_.empty()){
@@ -428,10 +423,10 @@ void Prop::Pickup(Hand* hand)
  */
 void Prop::Tick()
 {
-    if(stateMachine_->isDropped()){
+    if(!stateMachine_->isInFlight() || stateMachine_->isDropped()){
         return;
     }
-    else if(decrementSiteswap()){
+    else if(toss_.decrementSiteswap()){
         stateMachine_->process_event(catchEvent);
         catch_(this);
     }
@@ -453,15 +448,6 @@ std::wstring Prop::toWstring()
 
 // Private methods
 
-bool Prop::decrementSiteswap()
-{
-    bool bRet(0 == toss_.siteswap);
-    if(!bRet){
-        --toss_.siteswap;
-         bRet = (0 == toss_.siteswap);
-    }
-    return bRet; 
-}
 // Connect the state signals to the hand
 void Prop::connectHand(Hand* hand)
 { 

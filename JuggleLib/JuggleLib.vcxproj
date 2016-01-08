@@ -178,6 +178,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Prop.cpp" />
+    <ClCompile Include="Throw.cpp" />
     <ClCompile Include="Trajectory.cpp" />
   </ItemGroup>
   <ItemGroup>

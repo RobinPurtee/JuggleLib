@@ -1,10 +1,8 @@
 #pragma once
-#include <memory>
-#include "Prop.h"
 
 class Hand;
 /**
- * This structure represents a passing action to be taken by a hand
+ * This class represents a passing action to be taken by a hand
  * The intent is for the hand to contain a list of these that it circles through
  * to provide the actions of the pattern
  *
@@ -12,20 +10,22 @@ class Hand;
 class Throw
 {
 public:
-    Throw() : siteswap(0), destination(nullptr) {}
+    Throw();
+    Throw(int swap, Hand* dest); 
+    int getSiteswap()           {return siteswap_;}
+    Hand* getDestination()      {return destination_;}
 
-    Throw(int swap, Hand* dest) 
-        :  siteswap(swap)
-        ,  destination(dest)
-    {}
 
-    void clear()
-    {
-        siteswap = 0;
-        destination = nullptr;
-    }
+    
+    void clear();
 
-    int siteswap;
-    Hand* destination;
+    bool isZero();
+
+    bool decrementSiteswap();
+
+
+private:
+    int siteswap_;
+    Hand* destination_;
 };
 

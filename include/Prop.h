@@ -31,14 +31,6 @@ public:
     static const char* getStateName(Prop::State state);
     
     /**
-     * The current count away from the next hand
-     * @return If the state is Flight then the number of counts away from its 
-     *         destination Hand, else the value is 0;
-     * @remark The value is set by the Throw and decremented each time Count is called 
-     */
-    int getCurrentSwap();
-
-    /**
      * 
      */
     bool isDropped();
@@ -69,10 +61,6 @@ public:
 
     std::string toString();
     std::wstring toWstring();
-
-protected:
-    bool decrementSiteswap();
-
 
     
 private:

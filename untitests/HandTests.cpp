@@ -40,7 +40,7 @@ namespace untitests
             DebugOut() << "after release \n" << hand.toString() << prop.toString();
             Assert::IsTrue(hand.isVacant(), L"The hand is not vacant after the release");
             // clock the flight through
-            for(int i = 0 ; i < toss.siteswap ; ++i)
+            for(int i = 0 ; i < toss.getSiteswap() ; ++i)
             {
                 Assert::IsTrue(hand.isVacant(), L"The hand has not released the prop");
                 Assert::IsTrue(prop.isInFlight(), L"The prop is not in flight after the release");
@@ -103,35 +103,49 @@ namespace untitests
         }
 
 
-        void TestThrow(Throw* toss, Hand& hand, Prop& prop0, Prop& prop1)
+        void TestThrow(const char* whenMessage, Throw* toss, Hand& hand, Prop& prop0, Prop& prop1)
         {
+            std::string progressMessage;
+
             hand.Toss(toss);
-            DebugOut() << "After first toss\n" << hand.toString();
+            DebugOut() << whenMessage << "  - After toss\n" << hand.toString() << prop0.toString() << prop1.toString();
+            progressMessage = whenMessage;
+            progressMessage += " After toss hand state = ";
             TestState(static_cast<int>(hand.getState()), static_cast<int>(Hand::State::TOSS), 
-                      "After first toss the hand state = ", 
+                      progressMessage.c_str(), 
                       hand.getStateName(), 
                       hand.getStateName(Hand::State::TOSS));
+            progressMessage = whenMessage;
+            progressMessage += " After toss prop0 state = ";
             TestState(static_cast<int>(prop0.getState()), static_cast<int>(Prop::State::DWELL), 
-                      "After first toss prop0 state = ", 
+                      progressMessage.c_str(), 
                       prop0.getStateName(), 
                       prop0.getStateName(Prop::State::DWELL));
+            progressMessage = whenMessage;
+            progressMessage += " After toss prop1 state = ";
             TestState(static_cast<int>(prop1.getState()), static_cast<int>(Prop::State::DWELL), 
-                      "After first toss prop1 state = ", 
+                      progressMessage.c_str(), 
                       prop1.getStateName(), 
                       prop1.getStateName(Prop::State::DWELL));
 
             hand.Release();
-            DebugOut() << "After first release\n" << hand.toString();
+            DebugOut() << whenMessage << "  - After Release\n" << hand.toString() << prop0.toString() << prop1.toString();
+            progressMessage = whenMessage;
+            progressMessage += " After release hand state = ";
             TestState(static_cast<int>(hand.getState()), static_cast<int>(Hand::State::DWELL), 
-                      "After first release hand state = ", 
+                      progressMessage.c_str(), 
                       hand.getStateName(), 
                       hand.getStateName(Hand::State::DWELL));
+            progressMessage = whenMessage;
+            progressMessage += " After release prop0 state = ";
             TestState(static_cast<int>(prop0.getState()), static_cast<int>(Prop::State::FLIGHT), 
-                      "After first release prop0 state = ", 
+                      progressMessage.c_str(), 
                       prop0.getStateName(), 
                       prop0.getStateName(Prop::State::FLIGHT));
+            progressMessage = whenMessage;
+            progressMessage += " After release prop1 state = ";
             TestState(static_cast<int>(prop1.getState()), static_cast<int>(Prop::State::DWELL), 
-                      "After first release prop1 state = ", 
+                      progressMessage.c_str(), 
                       prop1.getStateName(), 
                       prop1.getStateName(Prop::State::DWELL));
         }
@@ -152,7 +166,7 @@ namespace untitests
             DebugOut() << "initial \n" << hand.toString() << prop0.toString() << prop1.toString();
             
             hand.Pickup(&prop0);
-            DebugOut() << "After pickup of prop0\n" << hand.toString();
+            DebugOut() << "After pickup of prop0\n" << hand.toString() << prop0.toString() << prop1.toString();
             TestState(static_cast<int>(hand.getState()), static_cast<int>(Hand::State::DWELL), 
                       "After pickup of prop0 the hand state = ", 
                       hand.getStateName(), 
@@ -163,7 +177,7 @@ namespace untitests
                       prop0.getStateName(Prop::State::DWELL));
 
             hand.Pickup(&prop1);
-            DebugOut() << "After pickup of prop1\n" << hand.toString();
+            DebugOut() << "After pickup of prop1\n" << hand.toString() << prop0.toString() << prop1.toString();
             TestState(static_cast<int>(hand.getState()), static_cast<int>(Hand::State::DWELL), 
                       "After pickup of prop1 the hand state = ", 
                       hand.getStateName(), 
@@ -177,10 +191,10 @@ namespace untitests
                       prop1.getStateName(), 
                       prop1.getStateName(Prop::State::DWELL));
 
-            TestThrow(&toss, hand, prop0, prop1);
+            TestThrow("Throwing first prop", &toss, hand, prop0, prop1);
 
             tick();
-            DebugOut() << "After first tick\n" << hand.toString();
+            DebugOut() << "After first tick\n" << hand.toString() << prop0.toString() << prop1.toString();
             TestState(static_cast<int>(hand.getState()), static_cast<int>(Hand::State::DWELL), 
                       "After first tick hand state = ", 
                       hand.getStateName(), 
@@ -195,49 +209,20 @@ namespace untitests
                       prop1.getStateName(Prop::State::DWELL));
 
             tick();
-            hand.Toss(&toss);
-            DebugOut() << "After second toss\n" << hand.toString();
-            TestState(static_cast<int>(hand.getState()), static_cast<int>(Hand::State::TOSS), 
-                      "After second toss the hand state = ", 
-                      hand.getStateName(), 
-                      hand.getStateName(Hand::State::TOSS));
-            TestState(static_cast<int>(prop0.getState()), static_cast<int>(Prop::State::FLIGHT), 
-                      "After second toss prop0 state = ", 
-                      prop0.getStateName(), 
-                      prop0.getStateName(Prop::State::FLIGHT));
-            TestState(static_cast<int>(prop1.getState()), static_cast<int>(Prop::State::DWELL), 
-                      "After second toss prop1 state = ", 
-                      prop1.getStateName(), 
-                      prop1.getStateName(Prop::State::DWELL));
-
-            hand.Release();
-            DebugOut() << "After second release\n" << hand.toString();
-            TestState(static_cast<int>(hand.getState()), static_cast<int>(Hand::State::VACANT), 
-                      "After second release hand state = ", 
-                      hand.getStateName(), 
-                      hand.getStateName(Hand::State::VACANT));
-            TestState(static_cast<int>(prop0.getState()), static_cast<int>(Prop::State::FLIGHT), 
-                      "After second release prop0 state = ", 
-                      prop0.getStateName(), 
-                      prop0.getStateName(Prop::State::FLIGHT));
-            TestState(static_cast<int>(prop1.getState()), static_cast<int>(Prop::State::FLIGHT), 
-                      "After second release prop1 state = ", 
-                      prop1.getStateName(), 
-                      prop1.getStateName(Prop::State::FLIGHT));
-
+            TestThrow("Throwing second prop", &toss, hand, prop0, prop1);
             tick();
             tick();
-            DebugOut() << "First Prop throw complete\n" << hand.toString();
+            DebugOut() << "Catch First Prop\n" << hand.toString() << prop0.toString() << prop1.toString();
             TestState(static_cast<int>(hand.getState()), static_cast<int>(Hand::State::VACANT), 
-                      "First Prop throw complete the hand state = ", 
+                      "Catch First Prop hand state = ", 
                       hand.getStateName(), 
                       hand.getStateName(Hand::State::VACANT));
             TestState(static_cast<int>(prop0.getState()), static_cast<int>(Prop::State::CATCH), 
-                      "First Prop throw complete prop0 state = ", 
+                      "Catch First Prop prop0 state = ", 
                       prop0.getStateName(), 
                       prop0.getStateName(Prop::State::CATCH));
             TestState(static_cast<int>(prop1.getState()), static_cast<int>(Prop::State::FLIGHT), 
-                      "First Prop throw complete prop1 state = ", 
+                      "Catch First Prop prop1 state = ", 
                       prop1.getStateName(), 
                       prop1.getStateName(Prop::State::FLIGHT));
 
