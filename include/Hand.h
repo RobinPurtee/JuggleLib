@@ -21,6 +21,7 @@ public:
      * Get the string of the current state name
      */
     const char* getStateName();
+    static const char* getStateName(Hand::State state);
 
 
     void Pickup(Prop* prop);
@@ -37,6 +38,7 @@ public:
     void Collect();
 
     std::string toString();
+    std::wstring toWstring();
 
 protected:
     Prop* propCatching_;

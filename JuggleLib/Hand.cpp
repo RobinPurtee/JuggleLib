@@ -288,10 +288,14 @@ struct Hand::HandStateMachine : public Base
 
     const char* getStateName()
     {
-        int value = getState();
-        const char* ret(handStateNames[value]);
-        return ret;
+        return getStateName(getState());
     }
+
+    static const char* getStateName(int state)
+    {
+        return handStateNames[state];
+    }
+
 
 
     void pickupAction(Prop* prop)
@@ -373,6 +377,11 @@ const char* Hand::getStateName()
 {
     return  stateMachine_->getStateName();
 }
+
+const char* Hand::getStateName(Hand::State state)
+{
+    return Hand::HandStateMachine::getStateName(static_cast<int>(state));
+}
 /// Pick up a prop and add it to the back of the que
 void Hand::Pickup(Prop* prop)
 {
@@ -450,6 +459,11 @@ std::string Hand::toString()
     return out.str();
 }
 
+std::wstring Hand::toWstring()
+{
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> widend;
+    return widend.from_bytes(toString());
+}
 
 
 

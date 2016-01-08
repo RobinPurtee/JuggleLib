@@ -222,8 +222,14 @@ struct Prop::PropStateMachine : public Base
     
     const char* getStateName()
     {
-        return stateNames[getStateValue()]; 
+        return getStateName(getStateValue()); 
     }
+
+    static const char* getStateName(int state)
+    {
+        return stateNames[state];
+    }
+
     // Slot for the dropped state signal from the state machine
     void dropped()
     {
@@ -265,6 +271,11 @@ const char* Prop::getStateName()
 {
     return stateMachine_->getStateName(); 
 }
+const char* Prop::getStateName(Prop::State state)
+{
+    return Prop::PropStateMachine::getStateName(static_cast<int>(state)); 
+}
+
 // test for Dropped state
 bool Prop::isDropped()
 {
@@ -432,6 +443,13 @@ std::string Prop::toString()
     out << "Prop id: " << id_ << " State(" << stateMachine_->getStateValue() << "): " << getStateName() << std::endl;
     return out.str();
 }
+
+std::wstring Prop::toWstring()
+{
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> widend;
+    return widend.from_bytes(toString());
+}
+
 
 // Private methods
 

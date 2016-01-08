@@ -18,8 +18,8 @@ public:
     enum class State:int {
         DROPPED = 0,
         DWELL = 1, 
-        FLIGHT, 
-        CATCH, 
+        FLIGHT = 2, 
+        CATCH = 3, 
     };
 
     Prop::State getState();
@@ -28,6 +28,7 @@ public:
      * Get the string of the current state name
      */
     const char* getStateName();
+    static const char* getStateName(Prop::State state);
     
     /**
      * The current count away from the next hand
@@ -67,6 +68,7 @@ public:
     void disconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
 
     std::string toString();
+    std::wstring toWstring();
 
 protected:
     bool decrementSiteswap();

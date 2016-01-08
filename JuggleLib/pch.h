@@ -11,6 +11,7 @@
 // Windows Header Files:
 #include <windows.h>
 #include <ostream>
+#include <codecvt>
 #include <string>
 #include <algorithm>
 #include <exception>

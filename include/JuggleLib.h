@@ -7,6 +7,7 @@ class Prop;
 
 typedef boost::signals2::signal<void(int)> IdPublisher;
 typedef boost::signals2::signal<void(Prop*)> PropPublisher;
+typedef boost::signals2::signal<void()> tickPublisher;
 
 typedef std::function<void(int)> IdSlot;
 typedef std::function<void(Prop*)> PropSlot;
