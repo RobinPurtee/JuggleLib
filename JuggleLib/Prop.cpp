@@ -10,16 +10,19 @@
 namespace 
 {
     using namespace StateMachine;
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Prop*, prop_);
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, tick_);
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, drop_);
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ThrowSlot, tossedSlot_);
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(HandSlot, pickup_);
+ 
 
     BOOST_MSM_EUML_FLAG(isDroppedFlag_);
     BOOST_MSM_EUML_FLAG(isInPlayFlag_);
     BOOST_MSM_EUML_FLAG(isInFlightFlag_);
 
-    BOOST_MSM_EUML_EVENT(pickupEvent)
-    BOOST_MSM_EUML_EVENT(caughtEvent)
     BOOST_MSM_EUML_EVENT(catchEvent)
+    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(pickupEvent, handAttributes)
+    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(caughtEvent, handAttributes)
 
     /**
      * Invalid transistion handler
@@ -30,22 +33,59 @@ namespace
         template <class FSM,class Event>
         void operator()(Event const& e,FSM& fsm,int state)
         {
-            DebugOut() << "PropStateMachine::invald_state_transistion: by event: " << typeid(e).name() << "with PropMachine state: " << stateNames[state]; 
-            fsm.process_event(collisionEvent);
+            DebugOut() << "Prop - invald_state_transistion: by event: " << typeid(e).name() << "with PropMachine state: " << stateNames[state]; 
+            fsm.get_attribute(drop_)();
+        }
+    };
+    /// pickup action
+    BOOST_MSM_EUML_ACTION(pickup_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            DebugOut() << "Prop - pickup_action";
+            fsm.get_attribute(pickup_)(evt.get_attribute(Ahand));
+        }
+    };
+    /// toss action
+    BOOST_MSM_EUML_ACTION(toss_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            DebugOut() << "Prop - toss_action";
+            fsm.get_attribute(tossedSlot_)(evt.get_attribute(Atoss));
+        }
+    };
+    /// tick_action
+    BOOST_MSM_EUML_ACTION(tick_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            DebugOut() << "Prop - tick_action";
+            fsm.get_attribute(tick_)();
+        }
+    };
+    /// dropped action - this forces the state machine into dropped state
+    BOOST_MSM_EUML_ACTION(dropped_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            DebugOut() << "Prop - dropped_action";
+            fsm.get_attribute(drop_)();
         }
     };
 
 
-    /* 
-     *  The catch state and support methods
-     */
-
+    ///  The catch state and support methods
     BOOST_MSM_EUML_ACTION(catch_entry_action)
     {
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut() << "PropStateMachine::catch_entry_action";
+            DebugOut() << "Prop - entered CATCH state";
         }
     };
     BOOST_MSM_EUML_ACTION(catch_exit_action)
@@ -53,24 +93,18 @@ namespace
         template <class FSM, class EVT, class State>
         void operator()(EVT const& evt, FSM& fsm, State& state)
         {
-            DebugOut() << "PropStateMachine::catch_exit_action";
+            DebugOut() << "Prop - exited CATCH state";
         }
     };
-    BOOST_MSM_EUML_STATE(
-    (
-        catch_entry_action, 
-        catch_exit_action
-    ), CATCH)
+    BOOST_MSM_EUML_STATE((catch_entry_action, catch_exit_action), CATCH)
 
-    /* 
-     *  The flight state and support methods
-     */
+    /// The flight state and support methods
     BOOST_MSM_EUML_ACTION(flight_entry_action)
     {
         template <class FSM,class EVT,class State>
         void operator()(EVT const& evt ,FSM& fsm, State& state )
         {
-            DebugOut() << "PropStateMachine::flight_entry_action";
+            DebugOut() << "Prop - entered FLIGHT state";
         }
     };
     BOOST_MSM_EUML_ACTION(flight_exit_action)
@@ -78,10 +112,9 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut() << "PropStateMachine::flight_exit_action";
+            DebugOut() << "Prop - exited FLIGHT state";
         }
     };
-
     BOOST_MSM_EUML_STATE(
     (
         flight_entry_action,
@@ -90,27 +123,40 @@ namespace
         configure_ << isInFlightFlag_
     ), FLIGHT)
 
-    /**
-     *  Prop state machine transition table
-     */
     // IN_PLAY transition table
     BOOST_MSM_EUML_TRANSITION_TABLE(
     (
-        FLIGHT == DWELL + tossEvent,
-        DWELL + pickupEvent,
+        FLIGHT == DWELL + tossEvent / toss_action,
+        DWELL + pickupEvent / pickup_action,
         CATCH == FLIGHT + catchEvent,
         DWELL == CATCH + caughtEvent,
-        CATCH + tickEvent 
+        FLIGHT + tickEvent / tick_action,
+        CATCH + tickEvent / dropped_action
     ), prop_in_play_transition_table)
-
-    //The declaration of the IN_PLAY state machine type
+    // The declaration of the IN_PLAY state machine type
+    BOOST_MSM_EUML_ACTION(inplay_entry_action)
+    {
+        template <class FSM,class EVT,class State>
+        void operator()(EVT const& evt ,FSM& fsm, State& state )
+        {
+            DebugOut() << "Prop - entered IN_PLAY state";
+        }
+    };
+    BOOST_MSM_EUML_ACTION(inplay_exit_action)
+    {
+        template <class Event, class FSM, class STATE>
+        void operator()(Event const& evt, FSM& fsm, STATE& state)
+        {
+            DebugOut() << "Prop - exited IN_PLAY state";
+        }
+    };
     BOOST_MSM_EUML_DECLARE_STATE_MACHINE( 
     (
         prop_in_play_transition_table, 
         init_ << DWELL,
-        no_action,
-        no_action,
-        attributes_ << no_attributes_,  //<< prop_ << drop_,
+        inplay_entry_action,
+        inplay_exit_action,
+        attributes_ << tick_ << pickup_ << tossedSlot_ << drop_,
         configure_ << isInPlayFlag_,
         invalid_state_transistion
     ), in_play_state_machine)
@@ -118,57 +164,66 @@ namespace
     typedef msm::back::state_machine<in_play_state_machine> in_play_type;
 
     static in_play_type  IN_PLAY;
-
-
-    /* 
-     *  The dropped state and support methods
-     */
-
-    BOOST_MSM_EUML_ACTION(dropped_entry)
+    ///  The dropped state and support methods
+    BOOST_MSM_EUML_ACTION(dropped_entry_action)
     {
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut() << "PropStateMachine::dropped_entry";
-            fsm.get_attribute(drop_)();
+            DebugOut() << "Prop - entered DROPPED state";
+        }
+    };
+    BOOST_MSM_EUML_ACTION(dropped_exit_action)
+    {
+        template <class Event, class FSM, class STATE>
+        void operator()(Event const& evt, FSM& fsm, STATE& state)
+        {
+            DebugOut() << "Prop - exited DROPPED state";
         }
     };
     BOOST_MSM_EUML_STATE(
     (
-        dropped_entry,
-        no_action,
+        dropped_entry_action,
+        dropped_exit_action,
         attributes_ << no_attributes_,
         configure_ << isDroppedFlag_
     ), DROPPED)
- 
-
-
-    // prop state machine
+    /// prop Main state machine
     BOOST_MSM_EUML_TRANSITION_TABLE(
     (
-        IN_PLAY == DROPPED + pickupEvent,
-        DROPPED == IN_PLAY + collisionEvent
+        IN_PLAY == DROPPED + pickupEvent / pickup_action,
+        DROPPED == IN_PLAY + collisionEvent / dropped_action
     ), prop_transition_table)
-
-
-
-    /**
-     * The declaration of the actual state machine type
-     */
+    /// The declaration of the actual state machine type
+    BOOST_MSM_EUML_ACTION(prop_state_entry_action)
+    {
+        template <class Event, class FSM, class STATE>
+        void operator()(Event const& evt, FSM& fsm, STATE& state)
+        {
+            DebugOut() << "Prop - entered Main State Machine";
+        }
+    };
+    BOOST_MSM_EUML_ACTION(prop_state_exit_action)
+    {
+        template <class Event, class FSM, class STATE>
+        void operator()(Event const& evt, FSM& fsm, STATE& state)
+        {
+            DebugOut() << "Prop - exited Main State Machine";
+        }
+    };
     BOOST_MSM_EUML_DECLARE_STATE_MACHINE( 
     (
         prop_transition_table, 
         init_ << DROPPED,
-        no_action,
-        no_action,
-        attributes_  << prop_ << drop_,
+        prop_state_entry_action,
+        prop_state_exit_action,
+        attributes_  << drop_ << pickup_,
         configure_ << no_configure_,
         invalid_state_transistion
     ), prop_state_machine)
 
-    // the type for the state machine
+    /// the type for the state machine
     typedef msm::back::state_machine<prop_state_machine> Base;
-
 
     const char* stateNames[] = {
         "Dropped",
@@ -176,7 +231,6 @@ namespace
         "Flight",
         "Catch",
     };
-
     const char* propStateNames[] = {
         "Dropped",        
         "In Play",
@@ -187,30 +241,35 @@ namespace
 /**
  *
  */
-struct Prop::PropStateMachine : public Base
+class Prop::PropStateMachine : public Base
 {
+public:
     PropStateMachine(Prop* prop)
     {
-        get_attribute(prop_) = prop;
-        get_attribute(drop_) = std::bind(&Prop::PropStateMachine::dropped, this);
-
+        prop_ = prop;
+        get_attribute(pickup_) = std::bind(&Prop::PropStateMachine::pickupAction, this, std::placeholders::_1);
+        get_attribute(drop_) = std::bind(&Prop::PropStateMachine::collisionAction, this);
+        get_state<in_play_type&>().get_attribute(drop_) = std::bind(&Prop::PropStateMachine::droppedAction, this);
+        get_state<in_play_type&>().get_attribute(pickup_) = std::bind(&Prop::PropStateMachine::pickupAction, this, std::placeholders::_1);
+        get_state<in_play_type&>().get_attribute(tossedSlot_) = std::bind(&Prop::PropStateMachine::tossedAction, this, std::placeholders::_1);
+        get_state<in_play_type&>().get_attribute(tick_) = std::bind(&Prop::PropStateMachine::tickAction, this);        
     }
-    // is the current state Dropped
+    /// is the current state Dropped
     bool isDropped()
     {
         return is_flag_active<isDroppedFlag__helper>();
     }
-    // is current state Flight
+    /// is current state Flight
     bool isInFlight()
     {
         return  is_flag_active<isInFlightFlag__helper>();
     }
-    // is the current state In Play 
+    /// is the current state In Play 
     bool isInPlay()
     {
         return is_flag_active<isInPlayFlag__helper>();
     }
-    // Get the current state value
+    /// Get the current state value
     int getStateValue()
     {
         int ret(*(current_state()));
@@ -219,169 +278,154 @@ struct Prop::PropStateMachine : public Base
         }
         return ret;
     }
-    
+    /// get the current state string   
     const char* getStateName()
     {
         return getStateName(getStateValue()); 
     }
-
+    /// get the state string for the given state 
     static const char* getStateName(int state)
     {
         return stateNames[state];
     }
-
-    // Slot for the dropped state signal from the state machine
-    void dropped()
+    /// Slot for the pickup state signal
+    void pickupAction(Hand* hand)
     {
-        Prop* prop(get_attribute(prop_));
-        prop->dropped_(prop);
-        prop->disconnectHand();
+        prop_->connectHand(hand);    
+    }   
+    /// Slot for the dropped state signal from the state machine
+    void droppedAction()
+    {
+        DebugOut() << "Prop::PropStateMachine::droppedAction";
+        process_event(collisionEvent);
     }
+
+    void collisionAction()
+    {
+        DebugOut() << "Prop::PropStateMachine::collisionAction";
+        prop_->dropped_(prop_);
+        prop_->disconnectHand();
+    }        
+
+    /// Slot for the tossed action
+    void tossedAction(Throw* toss)
+    {
+        prop_->toss_ = *toss;
+        prop_->disconnectHand();
+        if(nullptr != toss->getDestination()){
+            prop_->connectHand(toss->getDestination());
+        }
+        if(!prop_->tossed_.empty()){
+            prop_->tossed_(prop_);
+        }        
+    }
+
+    void tickAction()
+    {
+        if(prop_->toss_.decrementSiteswap()){
+            process_event(catchEvent);
+            prop_->catch_(prop_);
+        }
+    }
+
+
+
+private:
+    Prop* prop_;
 };
 
-/**
- *   constructor
- */
+/// Initializing constructor
 Prop::Prop(int id)
 :   stateMachine_(new Prop::PropStateMachine(this))
 ,   id_(id)
 ,   hand_(nullptr)
 {
 }
-
-/**
- *  destructor
- */
+///  destructor
 Prop::~Prop(void)
 {
 }
-
-/**
- *
- */
+/// Get the current state of the Prop
 Prop::State Prop::getState()
 {
     return static_cast<Prop::State>(stateMachine_->getStateValue());
 }
-
-/**
- *
- */
+/// Get the string for the current state
 const char* Prop::getStateName()
 {
     return stateMachine_->getStateName(); 
 }
+/// Get the string for the given state
 const char* Prop::getStateName(Prop::State state)
 {
     return Prop::PropStateMachine::getStateName(static_cast<int>(state)); 
 }
-
-// test for Dropped state
+/// test for Dropped state
 bool Prop::isDropped()
 {
     return stateMachine_->isDropped();
 }
-// test for InFlight state
+/// test for InFlight state
 bool Prop::isInFlight()
 {
     bool bRet = !toss_.isZero() && stateMachine_->isInFlight();
     return bRet;
 }
-// test for InPlay state   
+/// test for InPlay state   
 bool Prop::isInPlay()
 {
     return stateMachine_->isInPlay();
 }
-
-/**
- *
- */
+/// Connect a slot to the Toss signal
 void Prop::connectToToss(PropSlot slot)
 {
     tossed_.connect(slot);
 }
-
-/**
- *
- */
+/// Disconnect a slot from the Toss signal
 void Prop::disconnectFromToss(PropSlot slot)
 {
     tossed_.disconnect(slot);
 }
-
-/**
- *
- */
+/// Connect a slot to the Drop signal
 void Prop::connectToDrop(PropSlot slot)
 {
     dropped_.connect(slot);
 }
-
-/**
- *
- */
+/// Disconnect a slot from the Drop signal
 void Prop::disconnectFromDrop(PropSlot slot)
 {
     dropped_.disconnect(slot);
 }
-
-/**
- *
- */
+/// Connect a slot to the Catch signal
 void Prop::connectToCatch(PropSlot slot)
 {
     catch_.connect(slot);
 }
-
-/**
- *
- */
+/// Disconnect a slot from the Catch signal
 void Prop::disconnectFromCatch(PropSlot slot)
 {
     catch_.disconnect(slot);
 }
-
-/**
- *
- */
+/// connect all 3 slots
 void Prop::connectToAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot)
 {
     connectToToss(tossSlot);
     connectToDrop(dropSlot);
     connectToCatch(propSlot);
 }
-
-/**
- *
- */
+/// disconnect all 3 slots
 void Prop::disconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot)
 {
     disconnectFromToss(tossSlot);
     disconnectFromDrop(dropSlot);
     disconnectFromCatch(propSlot);
 }
-
-/**
- * Start accelorating the prop
- * @remarks 
- * A sucessful toss can only be started if the prop has be caught and in the DWELL state
- */
+/// Throw the prop
 void Prop::Toss(Throw& toss)
 {
-    toss_ = toss;
-    disconnectHand();
-    if(nullptr != toss.getDestination()){
-        connectHand(toss.getDestination());
-    }
-    stateMachine_->process_event(StateMachine::tossEvent);
-    if(!tossed_.empty()){
-        tossed_(this);
-    }
+    stateMachine_->process_event(StateMachine::tossEvent(&toss));
 }
-
-/**                                                                                        
- *
- */
+/// Recieved to indedcate that the prop has been caught
 void Prop::Caught()
 {
 #ifdef _DEBUG
@@ -389,47 +433,25 @@ void Prop::Caught()
         DebugOut() << "Prop::Catch - " << toString() << "by: " << hand_->toString(); 
     }
 #endif // _DEBUG
-    if(!stateMachine_->isDropped()){        
-        stateMachine_->process_event(caughtEvent);
-    }
+    //if(!stateMachine_->isDropped()){        
+        stateMachine_->process_event(caughtEvent(hand_));
+    //}
 }
 
-/**
- *
- */
+/// drop the prop
 void Prop::Collision()
 {
-    disconnectHand();
     stateMachine_->process_event(StateMachine::collisionEvent(this));
-    dropped_(this);
 }
-
-/**
- *
- */
+/// The prop has been picked up by the given hand
 void Prop::Pickup(Hand* hand)
 {
-    if(stateMachine_->isDropped()){
-        connectHand(hand);
-        stateMachine_->process_event(pickupEvent);
-    }
-    else{
-        stateMachine_->process_event(collisionEvent);
-    }
+    stateMachine_->process_event(pickupEvent(hand));
 }
-
-/**
- *
- */
+/// handler for a clock tick
 void Prop::Tick()
 {
-    if(!stateMachine_->isInFlight() || stateMachine_->isDropped()){
-        return;
-    }
-    else if(toss_.decrementSiteswap()){
-        stateMachine_->process_event(catchEvent);
-        catch_(this);
-    }
+    stateMachine_->process_event(tickEvent);
 }
 // get the current status string
 std::string Prop::toString()

@@ -93,7 +93,11 @@ namespace untitests
  
         }
 
-        void TestState(int actualState, int expectedState, const char* progress, 
+
+       
+
+        void TestState(int actualState, int expectedState, 
+                       const char* progress, 
                        const char* actual, const char* expected)
         {
             std::wstringstream message;

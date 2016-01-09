@@ -36,14 +36,21 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut() << "HandStateMachine::juggling_entry_action";
+            DebugOut() << "Hand - entered JUGGLING State";
         }
     };
-
+    BOOST_MSM_EUML_ACTION(juggling_exit_action)
+    {
+        template <class Event, class FSM, class STATE>
+        void operator()(Event const& evt, FSM& fsm, STATE& state)
+        {
+            DebugOut() << "Hand - exited JUGGLING State";
+        }
+    };
     BOOST_MSM_EUML_STATE(
     (
         juggling_entry_action,
-        no_action,
+        juggling_exit_action,
         attributes_ << no_attributes_,
         configure_ << isJugglingFlag
     ), JUGGLING)
@@ -53,14 +60,21 @@ namespace
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut() << "HandStateMachine::collecting_entry_action";
+            DebugOut() << "Hand - entered COLLECTING State";
         }
     };
-
+    BOOST_MSM_EUML_ACTION(collecting_exit_action)
+    {
+        template <class Event, class FSM, class STATE>
+        void operator()(Event const& evt, FSM& fsm, STATE& state)
+        {
+            DebugOut() << "Hand - exited COLLECTING State";
+        }
+    };
     BOOST_MSM_EUML_STATE(
     (
         collecting_entry_action,
-        no_action,
+        collecting_exit_action,
         attributes_ << no_attributes_,
         configure_ << isCollectingFlag
     ),  COLLECTING)
@@ -73,14 +87,21 @@ namespace
 
     BOOST_MSM_EUML_ACTION(toss_entry_action)
     {
-        template <class FSM, class EVT, class State>
-        void operator()(EVT const& evt, FSM& fsm, State& state)
+        template <class Event, class FSM, class STATE>
+        void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut() << "HandStateMachine::toss_entry_action";
+            DebugOut() << "Hand - entered TOSS State";
         }
     };
-
-    BOOST_MSM_EUML_STATE((toss_entry_action), TOSS)
+    BOOST_MSM_EUML_ACTION(toss_exit_action)
+    {
+        template <class Event, class FSM, class STATE>
+        void operator()(Event const& evt, FSM& fsm, STATE& state)
+        {
+            DebugOut() << "Hand - exited TOSS State";
+        }
+    };
+    BOOST_MSM_EUML_STATE((toss_entry_action, toss_exit_action), TOSS)
 
     /**
     * catch state and actions
@@ -90,39 +111,36 @@ namespace
         template <class FSM, class EVT, class State>
         void operator()(EVT const& evt, FSM& fsm, State& state )
         {
-            DebugOut() << "HandStateMachine::catch_entry_action";
+            DebugOut() << "Hand - entered CATCH State";
         }
     };
-
     BOOST_MSM_EUML_ACTION(catch_exit_action)
     {
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut() << "HandStateMachine::catch_exit_action";
+            DebugOut() << "Hand - exited CATCH State";
         }
     };
-
     BOOST_MSM_EUML_STATE((catch_entry_action, catch_exit_action), CATCH)
 
     /** 
      *  Vacant state
      */ 
-     BOOST_MSM_EUML_ACTION(vacant_entry_action)
+    BOOST_MSM_EUML_ACTION(vacant_entry_action)
     {
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut() << "HandStateMachine::vacant_entry_action";
+            DebugOut() << "Hand - entered VACANT State";
         }
     };
-
-     BOOST_MSM_EUML_ACTION(vacant_exit_action)
+    BOOST_MSM_EUML_ACTION(vacant_exit_action)
     {
         template <class Event, class FSM, class STATE>
         void operator()(Event const& evt, FSM& fsm, STATE& state)
         {
-            DebugOut() << "HandStateMachine::vacant_exit_action";
+            DebugOut() << "Hand - exited VACANT State";
         }
     };
     BOOST_MSM_EUML_STATE(
@@ -142,7 +160,7 @@ namespace
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            DebugOut() << "HandStateMachine::pickup_action";
+            DebugOut() << "Hand - executed pickup_action";
             fsm.get_attribute(pickupSlot_)(evt.get_attribute(Aprop));
         }
     };
@@ -152,7 +170,7 @@ namespace
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            DebugOut() << "HandStateMachine::release_action";
+            DebugOut() << "Hand - executed release_action";
             fsm.get_attribute( releaseSlot_)();
         }
     };
@@ -162,7 +180,7 @@ namespace
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            DebugOut() << "HandStateMachine::caught_action";
+            DebugOut() << "Hand - executed caught_action";
             fsm.get_attribute( caughtSlot_)();
         }
     };
@@ -172,7 +190,7 @@ namespace
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            DebugOut() << "HandStateMachine::drop_action";
+            DebugOut() << "Hand - executed drop_action";
             fsm.get_attribute( dropSlot_)();
         }
     };
@@ -187,7 +205,7 @@ namespace
         bool operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             bool bRet = fsm.get_attribute(Ahand)->isVacant();
-            DebugOut() << "HandStateMachine::vacant_guard: returned " << std::boolalpha << bRet;
+            DebugOut() << "Hand is currently " << (bRet) ? "VACANT" : "has a prop in it";
             return bRet;
         }
     };
@@ -221,7 +239,10 @@ namespace
         template <class FSM,class Event>
         void operator()(Event const& e,FSM& fsm,int state)
         {
-            DebugOut() << "HandStateMachine::invalid_state_transition";
+            DebugOut() << "Hand has had an invalid state_transition from State: " << 
+                handStateNames[state] <<
+                "caused by Event: " << typeid(e).name();
+
             fsm.get_attribute(Ahand)->Collision(nullptr);
         }
     };
@@ -295,9 +316,6 @@ struct Hand::HandStateMachine : public Base
     {
         return handStateNames[state];
     }
-
-
-
     void pickupAction(Prop* prop)
     {
         Hand* hand(get_attribute(Ahand));
@@ -391,7 +409,7 @@ void Hand::Pickup(Prop* prop)
 void Hand::Toss(Throw* toss)
 {
     assert(nullptr != toss);
-    stateMachine_->process_event(StateMachine::tossEvent);
+    stateMachine_->process_event(StateMachine::tossEvent(toss));
     toss_ = toss;
 }
 /// complete the toss of the prop and release it
@@ -439,7 +457,6 @@ void Hand::Collect()
 {
     stateMachine_->process_event(collectEvent);
 }
-
 /// Get the debug status output string
 std::string Hand::toString()
 {

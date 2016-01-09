@@ -75,7 +75,7 @@ private:
     Hand* hand_;
 
     int id_;
-    struct PropStateMachine;
+    class PropStateMachine;
     std::shared_ptr<PropStateMachine> stateMachine_;
 
 };
