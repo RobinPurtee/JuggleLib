@@ -2,6 +2,8 @@
 #include "JuggleLib.h"
 #include "Hand.h"
 
+typedef std::vector<Prop::State> PropStateList;
+
 class TestHand : public Hand
 {
 public:
@@ -14,7 +16,10 @@ public:
     void setTestMessage(const char* message);
 
     void assertHandState(Hand::State state);
+    void assertPropState(Prop* prop, Prop::State state);
     void assertPropState(int id, Prop::State state);
+    //void assertStates(Hand::State handState, Prop::State propStates[]);
+    void assertStates(Hand::State handState, PropStateList propStates);
 
     std::string toString();
     std::wstring toWstring();

@@ -108,7 +108,9 @@ namespace untitests
         }
 
 
-
+        /**
+         *  Flash 2 balls in one hand
+         */
         TEST_METHOD(Flash2BallsTest)
         {
             TestHand hand(0);
@@ -132,9 +134,14 @@ namespace untitests
             hand.Pickup(hand.getProp(1));
             hand.setTestMessage("After pickup of prop{1}");
             DebugOut() <<  hand.toString();
-            hand.assertHandState(Hand::State::DWELL);
-            hand.assertPropState(0, Prop::State::DWELL); 
-            hand.assertPropState(1, Prop::State::DWELL);
+            //hand.assertHandState(Hand::State::DWELL);
+            //hand.assertPropState(0, Prop::State::DWELL); 
+            //hand.assertPropState(1, Prop::State::DWELL);
+            PropStateList p = {Prop::State::DWELL, Prop::State::DWELL};
+
+//Prop::State p[]{Prop::State::DWELL, Prop::State::DWELL};
+
+            //hand.assertStates(Hand::State::DWELL, p);
 
             hand.setTestMessage("Tossed first prop");
             hand.Toss(&toss);
@@ -178,11 +185,20 @@ namespace untitests
             hand.assertHandState( Hand::State::CATCH);
             hand.assertPropState(0, Prop::State::CATCH);
             hand.assertPropState(1, Prop::State::FLIGHT);
-
+            hand.Caught();
+            hand.setTestMessage("Hand caught prop 0");
+            DebugOut() << hand.toString();
+            hand.assertHandState(Hand::State::DWELL);
+            hand.assertPropState(0, Prop::State::DWELL);
+            hand.assertPropState(1, Prop::State::FLIGHT);
+            tick();
+            tick();
+            hand.setTestMessage("6 ticks into it");
+            DebugOut() << hand.toString();
 
    
 
         }
 
     };
-}
+}                                                      
