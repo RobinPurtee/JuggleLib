@@ -205,7 +205,7 @@ namespace
         bool operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             bool bRet = fsm.get_attribute(Ahand)->isVacant();
-            DebugOut() << "Hand is currently " << (bRet) ? "VACANT" : "has a prop in it";
+            DebugOut() << "Hand is currently " << ((bRet) ? "VACANT" : "has a prop in it");
             return bRet;
         }
     };

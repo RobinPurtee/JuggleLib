@@ -139,9 +139,7 @@ namespace untitests
             //hand.assertPropState(1, Prop::State::DWELL);
             PropStateList p = {Prop::State::DWELL, Prop::State::DWELL};
 
-//Prop::State p[]{Prop::State::DWELL, Prop::State::DWELL};
-
-            //hand.assertStates(Hand::State::DWELL, p);
+            hand.assertStates(Hand::State::DWELL, p);
 
             hand.setTestMessage("Tossed first prop");
             hand.Toss(&toss);

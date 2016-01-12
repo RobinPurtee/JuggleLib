@@ -33,7 +33,7 @@ namespace
         template <class FSM,class Event>
         void operator()(Event const& e,FSM& fsm,int state)
         {
-            DebugOut() << "Prop - invald_state_transistion: by event: " << typeid(e).name() << "with PropMachine state: " << stateNames[state]; 
+            DebugOut() << "Prop - invald_state_transistion: by event: " << typeid(e).name() << " with Prop state: " << stateNames[state]; 
             fsm.get_attribute(drop_)();
         }
     };

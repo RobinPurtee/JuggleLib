@@ -58,20 +58,20 @@ void TestHand::assertPropState(int id, Prop::State state)
 
 
 
-//void TestHand::assertStates(Hand::State handState, Prop::State propStates[])
-//{
-//    assertHandState(handState);
-//
-//    PropMap::iterator propPairItr(props_.begin()); 
-//    int stateItr(0);
-//    while(propPairItr != props_.end()){
-//        assertPropState(propPairItr->second.get(), propStates[stateItr]);
-//        ++propPairItr; 
-//        ++ stateItr;
-//    }
-//}
+void TestHand::assertStates(Hand::State handState, Prop::State propStates[])
+{
+    assertHandState(handState);
 
-void TestHand::assertStates(Hand::State handState, PropStateList& propStates)
+    PropMap::iterator propPairItr(props_.begin()); 
+    int stateItr(0);
+    while(propPairItr != props_.end()){
+        assertPropState(propPairItr->second.get(), propStates[stateItr]);
+        ++propPairItr; 
+        ++stateItr;
+    }
+}
+
+void TestHand::assertStates(Hand::State handState, PropStateList propStates)
 {
     assertHandState(handState);
 
@@ -80,7 +80,7 @@ void TestHand::assertStates(Hand::State handState, PropStateList& propStates)
     while(propPairItr != props_.end() && stateItr != propStates.end()){
         assertPropState(propPairItr->second.get(), *stateItr);
         ++propPairItr; 
-        ++ stateItr;
+        ++stateItr;
     }
 }
 
@@ -89,7 +89,8 @@ void TestHand::assertStates(Hand::State handState, PropStateList& propStates)
 std::string TestHand::toString()
 {
     std::stringstream out;
-    out << std::endl << Hand::toString();
+    out << testMessage_ << std::endl; 
+    out << Hand::toString();
     out << "Prop List;" << std::endl;
     for(PropMap::value_type p : props_){
         out <<  p.second->toString();
