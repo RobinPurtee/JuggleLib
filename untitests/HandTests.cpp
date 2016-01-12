@@ -94,20 +94,6 @@ namespace untitests
  
         }
 
-
-       
-
-        void TestState(int actualState, int expectedState, 
-                       const char* progress, 
-                       const char* actual, const char* expected)
-        {
-            std::wstringstream message;
-
-            message << progress << actual << " not: " << expected ;
-            Assert::IsTrue(expectedState == actualState, message.str().c_str());
-        }
-
-
         /**
          *  Flash 2 balls in one hand
          */
@@ -128,74 +114,58 @@ namespace untitests
             hand.Pickup(hand.getProp(0));
             hand.setTestMessage("After pickup of prop(0)");
             DebugOut() <<  hand.toString();
-            hand.assertHandState(Hand::State::DWELL);
-            hand.assertPropState(0, Prop::State::DWELL); 
+            hand.assertStates(Hand::State::DWELL, Prop::State::DWELL, Prop::State::DROPPED);
 
             hand.Pickup(hand.getProp(1));
             hand.setTestMessage("After pickup of prop{1}");
             DebugOut() <<  hand.toString();
-            //hand.assertHandState(Hand::State::DWELL);
-            //hand.assertPropState(0, Prop::State::DWELL); 
-            //hand.assertPropState(1, Prop::State::DWELL);
-            PropStateList p = {Prop::State::DWELL, Prop::State::DWELL};
-
-            hand.assertStates(Hand::State::DWELL, p);
+            hand.assertStates(Hand::State::DWELL, Prop::State::DWELL, Prop::State::DWELL);
 
             hand.setTestMessage("Tossed first prop");
             hand.Toss(&toss);
             DebugOut() << hand.toString();
-            hand.assertHandState( Hand::State::TOSS);
-            hand.assertPropState(0, Prop::State::DWELL);
-            hand.assertPropState(1, Prop::State::DWELL);
+            hand.assertStates(Hand::State::TOSS, Prop::State::DWELL, Prop::State::DWELL);
 
             hand.Release();
             hand.setTestMessage("Release first prop");
             DebugOut()  << hand.toString();
-            hand.assertHandState( Hand::State::DWELL);
-            hand.assertPropState(0, Prop::State::FLIGHT);
-            hand.assertPropState(1, Prop::State::DWELL);
+            hand.assertStates(Hand::State::DWELL, Prop::State::FLIGHT, Prop::State::DWELL);
 
             tick();
             hand.setTestMessage("After first tick ");
             DebugOut() << hand.toString();
-            hand.assertHandState( Hand::State::DWELL);
-            hand.assertPropState(0, Prop::State::FLIGHT);
-            hand.assertPropState(1, Prop::State::DWELL);
+            hand.assertStates( Hand::State::DWELL, Prop::State::FLIGHT, Prop::State::DWELL);
             tick();
 
             hand.setTestMessage("Tossed second prop");
             hand.Toss(&toss);
             DebugOut() << hand.toString();
-            hand.assertHandState( Hand::State::TOSS);
-            hand.assertPropState(0, Prop::State::FLIGHT);
-            hand.assertPropState(1, Prop::State::DWELL);
+            hand.assertStates( Hand::State::TOSS, Prop::State::FLIGHT, Prop::State::DWELL);
 
             hand.Release();
             hand.setTestMessage("Release second prop");
             DebugOut()  << hand.toString();
-            hand.assertHandState( Hand::State::VACANT);
-            hand.assertPropState(0, Prop::State::FLIGHT);
-            hand.assertPropState(1, Prop::State::FLIGHT);
+            hand.assertStates( Hand::State::VACANT, Prop::State::FLIGHT, Prop::State::FLIGHT);
             tick();
             tick();
             hand.setTestMessage("4 ticks into it");
             DebugOut() << hand.toString();
-            hand.assertHandState( Hand::State::CATCH);
-            hand.assertPropState(0, Prop::State::CATCH);
-            hand.assertPropState(1, Prop::State::FLIGHT);
+            hand.assertStates( Hand::State::CATCH, Prop::State::CATCH, Prop::State::FLIGHT);
             hand.Caught();
             hand.setTestMessage("Hand caught prop 0");
             DebugOut() << hand.toString();
-            hand.assertHandState(Hand::State::DWELL);
-            hand.assertPropState(0, Prop::State::DWELL);
-            hand.assertPropState(1, Prop::State::FLIGHT);
+            hand.assertStates(Hand::State::DWELL, Prop::State::DWELL, Prop::State::FLIGHT);
+            hand.Collect();
             tick();
             tick();
             hand.setTestMessage("6 ticks into it");
             DebugOut() << hand.toString();
+            hand.assertStates(Hand::State::CATCH, Prop::State::DWELL, Prop::State::CATCH);
 
-   
-
+            hand.Caught();
+            hand.setTestMessage("After caught the second prop");
+            DebugOut() << hand.toString();
+            hand.assertStates(Hand::State::DWELL, Prop::State::DWELL, Prop::State::DWELL);
         }
 
     };

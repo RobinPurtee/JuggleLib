@@ -420,7 +420,7 @@ void Hand::Release()
 /// PropSlot for the Catch signal coming from the in coming Prop
 void Hand::Catch(Prop* prop)
 {
-    DebugOut() << "Hand::Catch;" << std::endl << toString() << "Catching: " << prop->toString();
+    DebugOut() << "Hand::Catch; Catching: " << prop->toString();
     if(nullptr != prop){
         propCatching_ = prop;
         stateMachine_->process_event(catchEvent(prop));

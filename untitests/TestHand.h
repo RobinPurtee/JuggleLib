@@ -19,7 +19,7 @@ public:
     void assertHandState(Hand::State state);
     void assertPropState(Prop* prop, Prop::State state);
     void assertPropState(int id, Prop::State state);
-    void assertStates(Hand::State handState, Prop::State propStates[]);
+    void assertStates(Hand::State handState, Prop::State state0, Prop::State state1);
     void assertStates(Hand::State handState, PropStateList propStates);
 
     std::string toString();

@@ -58,18 +58,11 @@ void TestHand::assertPropState(int id, Prop::State state)
 
 
 
-void TestHand::assertStates(Hand::State handState, Prop::State propStates[])
+void TestHand::assertStates(Hand::State handState, Prop::State state0, Prop::State state1)
 {
-    assertHandState(handState);
-
-    PropMap::iterator propPairItr(props_.begin()); 
-    int stateItr(0);
-    while(propPairItr != props_.end()){
-        assertPropState(propPairItr->second.get(), propStates[stateItr]);
-        ++propPairItr; 
-        ++stateItr;
-    }
-}
+    PropStateList list = {state0, state1};
+    assertStates(handState, list);
+ }
 
 void TestHand::assertStates(Hand::State handState, PropStateList propStates)
 {

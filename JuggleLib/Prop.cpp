@@ -131,7 +131,8 @@ namespace
         CATCH == FLIGHT + catchEvent,
         DWELL == CATCH + caughtEvent,
         FLIGHT + tickEvent / tick_action,
-        CATCH + tickEvent / dropped_action
+        CATCH + tickEvent / dropped_action,
+        DWELL + tickEvent
     ), prop_in_play_transition_table)
     // The declaration of the IN_PLAY state machine type
     BOOST_MSM_EUML_ACTION(inplay_entry_action)
