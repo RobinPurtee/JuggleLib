@@ -26,7 +26,7 @@ namespace
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropSlot, pickupSlot_)
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, releaseSlot_)
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, caughtSlot_)
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, dropSlot_)
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropSlot, dropSlot_)
 
 
 
@@ -188,7 +188,7 @@ namespace
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             DebugOut() << "Hand - executed drop_action";
-            fsm.get_attribute( dropSlot_)();
+            fsm.get_attribute( dropSlot_)(evt.get_attribute(Aprop));
         }
     };
  
@@ -211,17 +211,18 @@ namespace
      */
 
     BOOST_MSM_EUML_TRANSITION_TABLE((
-            DWELL == VACANT + pickupEvent / pickup_action,
-            TOSS == DWELL + tossEvent,
-            VACANT == TOSS + releaseEvent / release_action,
-            CATCH == VACANT + catchEvent,
-            CATCH == DWELL + catchEvent [is_flag_(isCollectingFlag)],
-            DWELL == VACANT [!is_vacant],
-            DWELL == CATCH + caughtEvent / caught_action,
-            DWELL + pickupEvent [is_flag_(isCollectingFlag)] / pickup_action,
-            VACANT == CATCH + collisionEvent,
-            VACANT == DWELL + collisionEvent,
-            VACANT == TOSS + collisionEvent,
+            DWELL ==    VACANT + pickupEvent / pickup_action,
+                        DWELL + pickupEvent [is_flag_(isCollectingFlag)] / pickup_action,
+            TOSS ==     DWELL + tossEvent,
+            VACANT ==   TOSS + releaseEvent / release_action,
+            CATCH ==    VACANT + catchEvent,
+                        DWELL + catchEvent [is_flag_(isJugglingFlag)] / drop_action,
+            CATCH ==    DWELL + catchEvent [is_flag_(isCollectingFlag)],
+            DWELL ==    VACANT [!is_vacant],
+            DWELL ==    CATCH + caughtEvent / caught_action,
+            VACANT ==   CATCH + collisionEvent,
+            VACANT ==   DWELL + collisionEvent,
+            VACANT ==   TOSS + collisionEvent,
             // Action state
             JUGGLING == COLLECTING + tossEvent,
             COLLECTING == JUGGLING + collectEvent
@@ -239,7 +240,7 @@ namespace
                 handStateNames[state] <<
                 "caused by Event: " << typeid(e).name();
 
-            fsm.get_attribute(Ahand)->Collision(nullptr);
+            fsm.get_attribute(Ahand)->Collision();
         }
     };
 
@@ -282,7 +283,7 @@ struct Hand::HandStateMachine : public Base
         get_attribute(pickupSlot_) = std::bind(&Hand::HandStateMachine::pickupAction, this, std::placeholders::_1);
         get_attribute(releaseSlot_) = std::bind(&Hand::HandStateMachine::releaseAction, this);        
         get_attribute(caughtSlot_) = std::bind(&Hand::HandStateMachine::caughtAction, this);        
-        get_attribute(dropSlot_) = std::bind(&Hand::HandStateMachine::dropAction, this);        
+        get_attribute(dropSlot_) = std::bind(&Hand::HandStateMachine::dropAction, this, std::placeholders::_1);        
     }
 
     /// is the current state machine juggling
@@ -339,18 +340,17 @@ struct Hand::HandStateMachine : public Base
         hand->props_.push_front(hand->propCatching_);
     }
 
-    void dropAction()
+    void dropAction(Prop* prop)
+    {
+        prop->Collision();
+    }
+
+    void collisionAction()
     {
         Hand* hand(get_attribute(Ahand));
         for(Prop* p : hand->props_){
             p->Collision();
         }
-        collisionAction(nullptr);
-    }
-
-    void collisionAction(Prop*)
-    {
-        Hand* hand(get_attribute(Ahand));
         hand->props_.clear();
         hand->toss_ = nullptr;
         process_event(collectEvent);;
@@ -420,8 +420,8 @@ void Hand::Catch(Prop* prop)
     if(nullptr != prop){
         propCatching_ = prop;
         stateMachine_->process_event(catchEvent(prop));
+        DebugOut() << std::endl << toString() << "Catching: " << prop->toString();
     }
-    DebugOut() << std::endl << toString() << "Catching: " << prop->toString();
 
 }
 /// Use to signal back to the prop that it has been caught 
@@ -441,12 +441,10 @@ void Hand::Caught()
 
 }
 /// PropSlot for a signal that the Prop has been dropped
-/// This will cause all Props currently in the hand to be dropped
-void Hand::Collision(Prop* prop)
+void Hand::Collision()
 {
-    assert(nullptr != prop);
-    DebugOut() << "Hand::Collision - " << std::endl << toString() << "Collision with: " << prop->toString();
-    stateMachine_->process_event(StateMachine::collisionEvent(prop));
+    DebugOut() << "Hand::Collision - " << std::endl << toString();
+    stateMachine_->process_event(StateMachine::collisionEvent);
 }
 /// set the hand into collection mode
 void Hand::Collect()

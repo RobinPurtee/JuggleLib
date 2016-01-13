@@ -442,7 +442,7 @@ void Prop::Caught()
 /// drop the prop
 void Prop::Collision()
 {
-    stateMachine_->process_event(StateMachine::collisionEvent(this));
+    stateMachine_->process_event(StateMachine::collisionEvent);
 }
 /// The prop has been picked up by the given hand
 void Prop::Pickup(Hand* hand)
@@ -452,6 +452,7 @@ void Prop::Pickup(Hand* hand)
 /// handler for a clock tick
 void Prop::Tick()
 {
+    DebugOut() << "Prop::Tick - Id = " << getId();
     stateMachine_->process_event(tickEvent);
 }
 // get the current status string
@@ -485,8 +486,8 @@ void Prop::connectHand(Hand* hand)
     PropSlot slot(nullptr);
     slot = (std::bind(&Hand::Catch, hand_, std::placeholders::_1));
     connectToCatch(slot);
-    slot = (std::bind(&Hand::Collision, hand_, std::placeholders::_1));
-    connectToDrop(slot);
+    //slot = (std::bind(&Hand::Collision, hand_));
+    //connectToDrop(slot);
 }
 // Disconnect the state signals from the hand
 void Prop::disconnectHand()
@@ -497,8 +498,8 @@ void Prop::disconnectHand()
     PropSlot slot(nullptr);
     slot = (std::bind(&Hand::Catch, hand_, std::placeholders::_1));
     disconnectFromCatch(slot);
-    slot = (std::bind(&Hand::Collision, hand_, std::placeholders::_1));
-    disconnectFromDrop(slot);
+    //slot = (std::bind(&Hand::Collision, hand_));
+    //disconnectFromDrop(slot);
     hand_ = nullptr;
 }
 

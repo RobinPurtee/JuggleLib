@@ -34,7 +34,7 @@ public:
     void Catch(Prop* prop);
     void Caught();
 
-    void Collision(Prop* prop);
+    void Collision();
     void Collect();
 
     virtual std::string toString();

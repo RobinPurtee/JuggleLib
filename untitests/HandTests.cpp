@@ -190,27 +190,20 @@ namespace untitests
 
             hand.Pickup(hand.getProp(0));
             hand.Pickup(hand.getProp(1));
-            hand.setTestMessage("After pickup of props");
-            DebugOut() <<  hand.toString();
-            hand.assertStates(Hand::State::DWELL, Prop::State::DWELL, Prop::State::DWELL);
-            hand.assertNumberOfProps(2);
-
             hand.Toss(&toss);
             hand.Release();
-            hand.setTestMessage("Release first prop");
-            DebugOut()  << hand.toString();
-            hand.assertStates(Hand::State::DWELL, Prop::State::FLIGHT, Prop::State::DWELL);
-            hand.assertNumberOfProps(1);
-
             tick();
-            hand.setTestMessage("Catching the toss");
-            DebugOut() << hand.toString();
-            hand.assertStates( Hand::State::DWELL, Prop::State::CATCH, Prop::State::DWELL);
-            hand.Caught();
-            hand.setTestMessage("Hand caught prop 0");
+            hand.setTestMessage("after tick");
             DebugOut() << hand.toString();
             hand.assertStates(Hand::State::DWELL, Prop::State::DROPPED, Prop::State::DWELL);
             hand.assertNumberOfProps(1);
+    
+            hand.Caught();
+            hand.setTestMessage("After caught prop");
+            DebugOut() << hand.toString();
+            hand.assertStates(Hand::State::DWELL, Prop::State::DROPPED, Prop::State::DWELL);
         }
+
+
     };
 }                                                      

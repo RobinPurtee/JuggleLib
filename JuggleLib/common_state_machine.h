@@ -21,7 +21,7 @@ namespace StateMachine
     BOOST_MSM_EUML_ATTRIBUTES((attributes_ << Ahand ), handAttributes);
 
     BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(tossEvent, tossAttributes)
-    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(collisionEvent, propAttributes)
+    BOOST_MSM_EUML_EVENT(collisionEvent)
     BOOST_MSM_EUML_EVENT(tickEvent)
 
     BOOST_MSM_EUML_ACTION(dwell_entry_action)

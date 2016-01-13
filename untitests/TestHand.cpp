@@ -39,14 +39,14 @@ void TestHand::assertHandState(Hand::State state)
 {
     std::stringstream message;
 
-    message << testMessage_ << " current state: " <<  getStateName() << " not: " << getStateName(state);
+    message << testMessage_ << "Hand current state: " <<  getStateName() << " not: " << getStateName(state);
     Assert::IsTrue(getState() == state, widend.from_bytes(message.str().c_str()).c_str()); 
 }
 
 void TestHand::assertPropState(Prop* prop, Prop::State state)
 {
     std::stringstream message;
-    message << testMessage_ << " current state: " <<  prop->getStateName() << " not: " << Prop::getStateName(state);
+    message << testMessage_ << "Prop(" << prop->getId() << ") current state: " <<  prop->getStateName() << " not: " << Prop::getStateName(state);
     Assert::IsTrue(prop->getState() == state, widend.from_bytes(message.str().c_str()).c_str());
 }
 
