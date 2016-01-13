@@ -57,6 +57,11 @@ void TestHand::assertPropState(int id, Prop::State state)
 }
 
 
+void TestHand::assertStates(Hand::State handState, Prop::State state0)
+{
+    PropStateList list = {state0};
+    assertStates(handState, list);
+ }
 
 void TestHand::assertStates(Hand::State handState, Prop::State state0, Prop::State state1)
 {
@@ -77,6 +82,13 @@ void TestHand::assertStates(Hand::State handState, PropStateList propStates)
     }
 }
 
+
+void TestHand::assertNumberOfProps(int num)
+{
+    std::stringstream message;
+    message << testMessage_ << " Number of props in hand is: " <<  getNumberOfProps() << " not: " << num;
+    Assert::IsTrue(getNumberOfProps() == num, widend.from_bytes(message.str().c_str()).c_str());
+}
 
 
 std::string TestHand::toString()

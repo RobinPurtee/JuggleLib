@@ -59,8 +59,8 @@ public:
     void connectToAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
     void disconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
 
-    std::string toString();
-    std::wstring toWstring();
+    virtual std::string toString();
+    virtual std::wstring toWstring();
 
     
 private:

@@ -37,12 +37,13 @@ public:
     void Collision(Prop* prop);
     void Collect();
 
-    std::string toString();
-    std::wstring toWstring();
+    virtual std::string toString();
+    virtual std::wstring toWstring();
 
 protected:
     Prop* propCatching_;
-
+    // the following is a debugging function
+    int getNumberOfProps()  {return props_.size();}
 private:
 
     std::deque<Prop*> props_;

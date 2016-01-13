@@ -164,7 +164,6 @@ namespace
             fsm.get_attribute(pickupSlot_)(evt.get_attribute(Aprop));
         }
     };
-
     BOOST_MSM_EUML_ACTION(release_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
@@ -174,7 +173,6 @@ namespace
             fsm.get_attribute( releaseSlot_)();
         }
     };
-
     BOOST_MSM_EUML_ACTION(caught_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
@@ -184,7 +182,6 @@ namespace
             fsm.get_attribute( caughtSlot_)();
         }
     };
-
     BOOST_MSM_EUML_ACTION(drop_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
@@ -194,8 +191,7 @@ namespace
             fsm.get_attribute( dropSlot_)();
         }
     };
-
-
+ 
     /**
     *  test if the hand is actually vacant
     */
@@ -219,10 +215,10 @@ namespace
             TOSS == DWELL + tossEvent,
             VACANT == TOSS + releaseEvent / release_action,
             CATCH == VACANT + catchEvent,
+            CATCH == DWELL + catchEvent [is_flag_(isCollectingFlag)],
             DWELL == VACANT [!is_vacant],
             DWELL == CATCH + caughtEvent / caught_action,
             DWELL + pickupEvent [is_flag_(isCollectingFlag)] / pickup_action,
-            DWELL + catchEvent [is_flag_(isCollectingFlag)] / pickup_action,
             VACANT == CATCH + collisionEvent,
             VACANT == DWELL + collisionEvent,
             VACANT == TOSS + collisionEvent,
