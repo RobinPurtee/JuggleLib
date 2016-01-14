@@ -34,12 +34,13 @@ public:
     void Catch(Prop* prop);
     void Caught();
 
-    void Collision();
+    void Drop();
     void Collect();
 
     virtual std::string toString();
     virtual std::wstring toWstring();
 
+    struct StateMachine;
 protected:
     Prop* propCatching_;
     // the following is a debugging function
@@ -50,8 +51,7 @@ private:
     Throw* toss_;
     int id_;
 
-    struct HandStateMachine;
-    std::shared_ptr<HandStateMachine> stateMachine_;
+    std::shared_ptr<StateMachine> stateMachine_;
 
 };
 

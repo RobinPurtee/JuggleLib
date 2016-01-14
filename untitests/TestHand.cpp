@@ -9,6 +9,10 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 static std::wstring_convert<std::codecvt_utf8<wchar_t>> widend;
 
 
+TestHand::TestHand()
+:   Hand(0)
+{
+}
 
 TestHand::TestHand(int id)
 :   Hand(id)
@@ -22,12 +26,22 @@ TestHand::~TestHand(void)
 
 void TestHand::addProp(int id)
 {
-    props_.emplace(id, PropPtr(new Prop(id)));
+    std::pair<PropMap::iterator, bool> opPair = props_.emplace(id, PropPtr(new Prop(id)));
+    if(opPair.second)
+    {
+        tick_.connect(std::bind(&Prop::Tick, opPair.first->second));
+    }
+
 }
 
 Prop* TestHand::getProp(int id)
 {
     return props_[id].get();
+}
+
+void TestHand::tick()
+{
+    tick_();
 }
 
 void TestHand::setTestMessage(const char* message)
@@ -39,14 +53,14 @@ void TestHand::assertHandState(Hand::State state)
 {
     std::stringstream message;
 
-    message << testMessage_ << "Hand current state: " <<  getStateName() << " not: " << getStateName(state);
+    message << testMessage_ << " Hand current state: " <<  getStateName() << " not: " << getStateName(state);
     Assert::IsTrue(getState() == state, widend.from_bytes(message.str().c_str()).c_str()); 
 }
 
 void TestHand::assertPropState(Prop* prop, Prop::State state)
 {
     std::stringstream message;
-    message << testMessage_ << "Prop(" << prop->getId() << ") current state: " <<  prop->getStateName() << " not: " << Prop::getStateName(state);
+    message << testMessage_ << " Prop(" << prop->getId() << ") current state: " <<  prop->getStateName() << " not: " << Prop::getStateName(state);
     Assert::IsTrue(prop->getState() == state, widend.from_bytes(message.str().c_str()).c_str());
 }
 

@@ -6,10 +6,19 @@
 #include "common_state_machine.h"
 #include <sstream>
 
+/**
+This object is actually made up of 3 objects
+1. The code in the anonymous namespace - which is the Boost Meta State Machine implemented using the eUML interface
+2. Hand::StateMachine - which is the actual implementation of the Finite State Machine and its action
+                        which has a private member of Hand has full access to the Hand class. This is glue that holds it all together
+3. Hand class - is the public interface and containing object of all instance data.
+
+*/
+
 
 namespace 
 {
-    using namespace StateMachine;
+    using namespace CommonStateMachine;
 
     BOOST_MSM_EUML_FLAG(isVacantFlag)
     BOOST_MSM_EUML_FLAG(isJugglingFlag)
@@ -19,11 +28,12 @@ namespace
     BOOST_MSM_EUML_EVENT(releaseEvent)
     BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(pickupEvent, propAttributes)
     BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(catchEvent, propAttributes)
+    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(dropPropEvent, propAttributes)
     BOOST_MSM_EUML_EVENT(caughtEvent)
     BOOST_MSM_EUML_EVENT(collectEvent)
-
-
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropSlot, pickupSlot_)
+    BOOST_MSM_EUML_EVENT(dropEvent)
+    
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Hand::StateMachine*, handSM_)
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, releaseSlot_)
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, caughtSlot_)
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(PropSlot, dropSlot_)
@@ -161,7 +171,7 @@ namespace
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             DebugOut() << "Hand - executed pickup_action";
-            fsm.get_attribute(pickupSlot_)(evt.get_attribute(Aprop));
+            fsm.get_attribute(handSM_)->pickupAction(evt.get_attribute(Aprop));
         }
     };
     BOOST_MSM_EUML_ACTION(release_action)
@@ -170,7 +180,7 @@ namespace
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             DebugOut() << "Hand - executed release_action";
-            fsm.get_attribute( releaseSlot_)();
+            fsm.get_attribute(handSM_)->releaseAction();
         }
     };
     BOOST_MSM_EUML_ACTION(caught_action)
@@ -179,7 +189,16 @@ namespace
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             DebugOut() << "Hand - executed caught_action";
-            fsm.get_attribute( caughtSlot_)();
+            fsm.get_attribute( handSM_)->caughtAction();
+        }
+    };
+    BOOST_MSM_EUML_ACTION(drop_prop_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            DebugOut() << "Hand - executed drop_prop_action";
+            fsm.get_attribute(handSM_)->collisionAction(evt.get_attribute(Aprop));
         }
     };
     BOOST_MSM_EUML_ACTION(drop_action)
@@ -188,10 +207,9 @@ namespace
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             DebugOut() << "Hand - executed drop_action";
-            fsm.get_attribute( dropSlot_)(evt.get_attribute(Aprop));
+            fsm.get_attribute(handSM_)->dropAction();
         }
     };
- 
     /**
     *  test if the hand is actually vacant
     */
@@ -200,12 +218,12 @@ namespace
         template <class FSM, class EVT, class SourceState, class TargetState>
         bool operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
-            bool bRet = fsm.get_attribute(Ahand)->isVacant();
+            bool bRet = fsm.get_attribute(handSM_)->isVacant();
             DebugOut() << "Hand is currently " << ((bRet) ? "VACANT" : "has a prop in it");
             return bRet;
         }
     };
-
+                             
     /** 
      *
      */
@@ -216,13 +234,14 @@ namespace
             TOSS ==     DWELL + tossEvent,
             VACANT ==   TOSS + releaseEvent / release_action,
             CATCH ==    VACANT + catchEvent,
-                        DWELL + catchEvent [is_flag_(isJugglingFlag)] / drop_action,
+                        DWELL + catchEvent [is_flag_(isJugglingFlag)] / drop_prop_action,
             CATCH ==    DWELL + catchEvent [is_flag_(isCollectingFlag)],
             DWELL ==    VACANT [!is_vacant],
             DWELL ==    CATCH + caughtEvent / caught_action,
-            VACANT ==   CATCH + collisionEvent,
-            VACANT ==   DWELL + collisionEvent,
-            VACANT ==   TOSS + collisionEvent,
+            VACANT ==   CATCH + dropEvent / drop_action,
+            VACANT ==   DWELL + dropEvent / drop_action,
+            VACANT ==   TOSS + dropEvent / drop_action,
+                        VACANT + dropEvent,
             // Action state
             JUGGLING == COLLECTING + tossEvent,
             COLLECTING == JUGGLING + collectEvent
@@ -238,9 +257,8 @@ namespace
         {
             DebugOut() << "Hand has had an invalid state_transition from State: " << 
                 handStateNames[state] <<
-                "caused by Event: " << typeid(e).name();
-
-            fsm.get_attribute(Ahand)->Collision();
+                " caused by Event: " << typeid(e).name();
+            fsm.get_attribute(handSM_)->dropAction();
         }
     };
 
@@ -252,11 +270,7 @@ namespace
             init_ << VACANT << COLLECTING,            // The initial State
             no_action,                  // The startup action
             no_action,                  // The exit action
-            attributes_     << Ahand 
-                            << pickupSlot_ 
-                            << releaseSlot_ 
-                            << caughtSlot_ 
-                            << dropSlot_, // the attributes
+            attributes_     << handSM_, // the attributes
             configure_ << no_configure_, // configuration parameters (flags and funcitons)
             invalid_state_transistion    // default action if transition is invalid
         ), hand_state_machine );
@@ -269,21 +283,22 @@ namespace
         "Vacant",
         "Dwell",
         "Toss",
-        "Catch"
+        "Catch",
+        "Collecting",
+        "Juggling"
     };
 
 }
 
-struct Hand::HandStateMachine : public Base
+struct Hand::StateMachine : public Base
 {
-    HandStateMachine(Hand* hand)
+    Hand* handPtr_;
+
+    StateMachine(Hand* hand)
         : Base()
     {
-        get_attribute(StateMachine::Ahand) = hand;
-        get_attribute(pickupSlot_) = std::bind(&Hand::HandStateMachine::pickupAction, this, std::placeholders::_1);
-        get_attribute(releaseSlot_) = std::bind(&Hand::HandStateMachine::releaseAction, this);        
-        get_attribute(caughtSlot_) = std::bind(&Hand::HandStateMachine::caughtAction, this);        
-        get_attribute(dropSlot_) = std::bind(&Hand::HandStateMachine::dropAction, this, std::placeholders::_1);        
+        handPtr_ = hand;
+        get_attribute(handSM_) = this;
     }
 
     /// is the current state machine juggling
@@ -297,70 +312,78 @@ struct Hand::HandStateMachine : public Base
     {
         return is_flag_active<isCollectingFlag_helper>();
     }
+
+    bool isVacant()
+    {
+        return handPtr_->props_.empty();
+    }
     /// get the int value of the current state
     int getState()
     {
         int ret = *current_state();
         return ret;
     }
-
+    /// get the name of the current state
     const char* getStateName()
     {
         return getStateName(getState());
     }
-
+    /// get the name of the given state
     static const char* getStateName(int state)
     {
         return handStateNames[state];
     }
+    /// Pickup action impl
     void pickupAction(Prop* prop)
     {
-        Hand* hand(get_attribute(Ahand));
         if(nullptr != prop){
-            hand->props_.push_back(prop);
-            prop->Pickup(hand);
+            handPtr_->props_.push_back(prop);
+            prop->Pickup(handPtr_);
         }
     }
-
+    /// release action impl
     void releaseAction()
     {
-        Hand* hand(get_attribute(Ahand));
-        if(!hand->props_.empty())
+        if(!handPtr_->props_.empty())
         {
-            (*(hand->props_.begin()))->Toss(*hand->toss_);
-            hand->props_.pop_front();
-            hand->toss_ = nullptr;
+            (*(handPtr_->props_.begin()))->Toss(*handPtr_->toss_);
+            handPtr_->props_.pop_front();
+            handPtr_->toss_ = nullptr;
         }
     }
-
+    /// caught action impl
     void caughtAction()
     {
-        Hand* hand(get_attribute(Ahand));
-        hand->propCatching_->Caught();
-        hand->props_.push_front(hand->propCatching_);
+        handPtr_->propCatching_->Caught();
+        handPtr_->props_.push_front(handPtr_->propCatching_);
     }
-
-    void dropAction(Prop* prop)
+    /// hand drop action impl
+    void dropAction()
     {
-        prop->Collision();
-    }
-
-    void collisionAction()
-    {
-        Hand* hand(get_attribute(Ahand));
-        for(Prop* p : hand->props_){
+        for(Prop* p : handPtr_->props_){
             p->Collision();
         }
-        hand->props_.clear();
-        hand->toss_ = nullptr;
-        process_event(collectEvent);;
+        handPtr_->props_.clear();
+        handPtr_->toss_ = nullptr;
+        handPtr_->propCatching_ = nullptr;
+        handPtr_->toString();
+        if(!isCollecting()){
+            process_event(collectEvent);
+        }
+    }
+    /// drop prop action impl
+    void collisionAction(Prop* prop)
+    {
+        if(nullptr != prop){
+            prop->Collision();
+        }
     }
 
 };
 
 /// initializing constructor
 Hand::Hand(int id)
-    : stateMachine_(new HandStateMachine(this))
+    : stateMachine_(new Hand::StateMachine(this))
     , id_(id)
     , toss_(nullptr)
     , propCatching_(nullptr)
@@ -394,7 +417,7 @@ const char* Hand::getStateName()
 
 const char* Hand::getStateName(Hand::State state)
 {
-    return Hand::HandStateMachine::getStateName(static_cast<int>(state));
+    return Hand::StateMachine::getStateName(static_cast<int>(state));
 }
 /// Pick up a prop and add it to the back of the que
 void Hand::Pickup(Prop* prop)
@@ -405,7 +428,7 @@ void Hand::Pickup(Prop* prop)
 void Hand::Toss(Throw* toss)
 {
     assert(nullptr != toss);
-    stateMachine_->process_event(StateMachine::tossEvent(toss));
+    stateMachine_->process_event(CommonStateMachine::tossEvent(toss));
     toss_ = toss;
 }
 /// complete the toss of the prop and release it
@@ -441,10 +464,10 @@ void Hand::Caught()
 
 }
 /// PropSlot for a signal that the Prop has been dropped
-void Hand::Collision()
+void Hand::Drop()
 {
-    DebugOut() << "Hand::Collision - " << std::endl << toString();
-    stateMachine_->process_event(StateMachine::collisionEvent);
+    DebugOut() << "Hand::Drop - " << std::endl << toString();
+    stateMachine_->process_event(dropEvent);
 }
 /// set the hand into collection mode
 void Hand::Collect()

@@ -8,7 +8,7 @@ using namespace boost::msm::front::euml;
 class Hand;
 class Throw;
 
-namespace StateMachine
+namespace CommonStateMachine
 {
 
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Throw*, Atoss)

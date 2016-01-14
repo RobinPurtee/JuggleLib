@@ -8,6 +8,7 @@ typedef std::array<Prop::State, 5> PropStateList;
 class TestHand : public Hand
 {
 public:
+    TestHand();
     TestHand(int id);
     ~TestHand(void);
 
@@ -15,6 +16,8 @@ public:
     Prop* getProp(int id);
 
     void setTestMessage(const char* message);
+
+    void tick();
 
     void assertHandState(Hand::State state);
     void assertPropState(Prop* prop, Prop::State state);
@@ -25,12 +28,16 @@ public:
 
     void assertNumberOfProps(int num);
 
+
+
     std::string toString() override;
     std::wstring toWstring() override;
 
 
 private:
     std::string testMessage_;
+    boost::signals2::signal<void()> tick_;
+
     typedef std::map<int, PropPtr> PropMap;
     PropMap props_;
 };

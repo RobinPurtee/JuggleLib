@@ -9,7 +9,7 @@
 
 namespace 
 {
-    using namespace StateMachine;
+    using namespace CommonStateMachine;
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, tick_);
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, drop_);
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ThrowSlot, tossedSlot_);
@@ -424,7 +424,7 @@ void Prop::disconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot prop
 /// Throw the prop
 void Prop::Toss(Throw& toss)
 {
-    stateMachine_->process_event(StateMachine::tossEvent(&toss));
+    stateMachine_->process_event(CommonStateMachine::tossEvent(&toss));
 }
 /// Recieved to indedcate that the prop has been caught
 void Prop::Caught()
@@ -442,7 +442,7 @@ void Prop::Caught()
 /// drop the prop
 void Prop::Collision()
 {
-    stateMachine_->process_event(StateMachine::collisionEvent);
+    stateMachine_->process_event(CommonStateMachine::collisionEvent);
 }
 /// The prop has been picked up by the given hand
 void Prop::Pickup(Hand* hand)
