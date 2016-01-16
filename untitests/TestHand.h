@@ -38,7 +38,6 @@ private:
     std::string testMessage_;
     boost::signals2::signal<void()> tick_;
 
-    typedef std::map<int, PropPtr> PropMap;
-    PropMap props_;
+   PropList props_;
 };
 

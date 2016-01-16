@@ -14,6 +14,7 @@
     <ClCompile Include="Hand.cpp" />
     <ClCompile Include="DropException.cpp" />
     <ClCompile Include="Throw.cpp" />
+    <ClCompile Include="DropReport.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -27,6 +28,7 @@
     <ClInclude Include="..\include\JuggleLib.h" />
     <ClInclude Include="..\include\Throw.h" />
     <ClInclude Include="PropClock.h" />
+    <ClInclude Include="..\include\DropReport.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

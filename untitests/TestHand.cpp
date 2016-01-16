@@ -26,17 +26,17 @@ TestHand::~TestHand(void)
 
 void TestHand::addProp(int id)
 {
-    std::pair<PropMap::iterator, bool> opPair = props_.emplace(id, PropPtr(new Prop(id)));
-    if(opPair.second)
-    {
-        tick_.connect(std::bind(&Prop::Tick, opPair.first->second));
-    }
-
+    PropPtr newProp(new Prop(id));
+    props_.push_back(newProp);
+    tick_.connect(std::bind(&Prop::Tick, newProp.get()));
 }
 
 Prop* TestHand::getProp(int id)
 {
-    return props_[id].get();
+    PropList::iterator propItr = std::find_if(props_.begin(), props_.end(), 
+                                              [id](PropPtr& prop)-> bool{return prop->getId() == id;});
+    return (*propItr).get();
+
 }
 
 void TestHand::tick()
@@ -87,10 +87,10 @@ void TestHand::assertStates(Hand::State handState, PropStateList propStates)
 {
     assertHandState(handState);
 
-    PropMap::iterator propPairItr(props_.begin()); 
+    PropList::iterator propPairItr(props_.begin()); 
     PropStateList::iterator stateItr(propStates.begin());
     while(propPairItr != props_.end() && stateItr != propStates.end()){
-        assertPropState(propPairItr->second.get(), *stateItr);
+        assertPropState((*propPairItr).get(), *stateItr);
         ++propPairItr; 
         ++stateItr;
     }
@@ -111,8 +111,8 @@ std::string TestHand::toString()
     out << testMessage_ << std::endl; 
     out << Hand::toString();
     out << "Prop List;" << std::endl;
-    for(PropMap::value_type p : props_){
-        out <<  p.second->toString();
+    for(PropPtr p : props_){
+        out <<  p->toString();
     }
     return out.str();
 }

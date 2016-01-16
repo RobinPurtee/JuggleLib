@@ -101,7 +101,6 @@ namespace unittests
         {
             Throw toss(4, &hand);
 
-            hand.addProp(0);
             hand.addProp(1);
 
             DebugOut() << "initial \n" << hand.toString();
@@ -111,7 +110,7 @@ namespace unittests
             DebugOut() <<  hand.toString();
             hand.assertStates(Hand::State::DWELL, Prop::State::DWELL, Prop::State::DROPPED);
 
-            hand.setTestMessage("After pickup of prop{1}");
+            hand.setTestMessage("After pickup of prop(1)");
             hand.Pickup(hand.getProp(1));
             DebugOut() <<  hand.toString();
             hand.assertStates(Hand::State::DWELL, Prop::State::DWELL, Prop::State::DWELL);

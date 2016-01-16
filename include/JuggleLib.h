@@ -7,7 +7,6 @@ class Prop;
 class Hand;
 class Throw;
 
-
 typedef boost::signals2::signal<void()> tickPublisher;
 typedef boost::signals2::signal<void(int)> IdPublisher;
 typedef boost::signals2::signal<void(Prop*)> PropPublisher;
@@ -21,4 +20,7 @@ typedef std::function<void(Hand*)> HandSlot;
 typedef std::function<void(Throw*)> ThrowSlot;
 
 #include "Prop.h"
+#include "Hand.h"
 #include "Throw.h"
+#include "DropReport.h"
+

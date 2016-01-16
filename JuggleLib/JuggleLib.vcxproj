@@ -156,6 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\include\DropException.h" />
+    <ClInclude Include="..\include\DropReport.h" />
     <ClInclude Include="..\include\Hand.h" />
     <ClInclude Include="..\include\JuggleLib.h" />
     <ClInclude Include="..\include\Throw.h" />
@@ -169,6 +170,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DropException.cpp" />
+    <ClCompile Include="DropReport.cpp" />
     <ClCompile Include="Hand.cpp" />
     <ClCompile Include="JuggleLib.cpp" />
     <ClCompile Include="pch.cpp">

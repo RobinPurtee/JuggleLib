@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <forward_list>
 #include "Throw.h"
 class Hand;
 
@@ -77,7 +78,8 @@ private:
     int id_;
     class PropStateMachine;
     std::shared_ptr<PropStateMachine> stateMachine_;
-
 };
 
 typedef std::shared_ptr<Prop> PropPtr;
+typedef std::list<PropPtr> PropList;
+typedef std::forward_list<Prop*> RawPropList;
