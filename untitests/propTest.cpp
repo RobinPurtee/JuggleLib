@@ -36,10 +36,10 @@ namespace untitests
                 DebugOut() << "In Catch callback: " << prop->toString();
             }
 
-            void Dropped(Prop* prop)
+            void Dropped(DropReportPtr drp)
             {
                 has_dropped_ = true;
-                DebugOut() << "In Dropped callback: " << prop->toString();
+                DebugOut() << "In Dropped callback: " << drp->toString();
             }
 
             bool has_tossed_;

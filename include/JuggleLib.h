@@ -18,9 +18,11 @@ typedef std::function<void(int)> IdSlot;
 typedef std::function<void(Prop*)> PropSlot;
 typedef std::function<void(Hand*)> HandSlot;
 typedef std::function<void(Throw*)> ThrowSlot;
+#include "DropReport.h"
+typedef boost::signals2::signal<void(DropReportPtr)> DropReportPublisher;
+typedef std::function<void(DropReportPtr)> DropReportSlot;
 
 #include "Prop.h"
 #include "Hand.h"
 #include "Throw.h"
-#include "DropReport.h"
 

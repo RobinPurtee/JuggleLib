@@ -14,6 +14,8 @@ namespace
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ActionSlot, drop_);
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(ThrowSlot, tossedSlot_);
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(HandSlot, pickup_);
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Prop::StateMachine*, propSM_);
+
  
 
     BOOST_MSM_EUML_FLAG(isDroppedFlag_);
@@ -34,7 +36,7 @@ namespace
         void operator()(Event const& e,FSM& fsm,int state)
         {
             DebugOut() << "Prop - invald_state_transistion: by event: " << typeid(e).name() << " with Prop state: " << stateNames[state]; 
-            fsm.get_attribute(drop_)();
+            fsm.get_attribute(propSM_)->droppedAction();
         }
     };
     /// pickup action
@@ -44,7 +46,7 @@ namespace
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             DebugOut() << "Prop - pickup_action";
-            fsm.get_attribute(pickup_)(evt.get_attribute(Ahand));
+            fsm.get_attribute(propSM_)->pickupAction(evt.get_attribute(Ahand));
         }
     };
     /// toss action
@@ -54,7 +56,7 @@ namespace
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             DebugOut() << "Prop - toss_action";
-            fsm.get_attribute(tossedSlot_)(evt.get_attribute(Atoss));
+            fsm.get_attribute(propSM_)->tossedAction(evt.get_attribute(Atoss));
         }
     };
     /// tick_action
@@ -64,7 +66,7 @@ namespace
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             DebugOut() << "Prop - tick_action";
-            fsm.get_attribute(tick_)();
+            fsm.get_attribute(propSM_)->tickAction();
         }
     };
     /// dropped action - this forces the state machine into dropped state
@@ -74,12 +76,20 @@ namespace
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
         {
             DebugOut() << "Prop - dropped_action";
-            fsm.get_attribute(drop_)();
+            fsm.get_attribute(propSM_)->collisionAction(evt.get_attribute(dropReportPtr_));
+        }
+    };
+    ///  The catch state and support methods
+    BOOST_MSM_EUML_ACTION(catch_missed_action)
+    {
+        template <class FSM, class EVT, class SourceState, class TargetState>
+        void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
+        {
+            DebugOut() << "Prop - catch_missed_action";
+            fsm.get_attribute(propSM_)->missedCatchAction();
         }
     };
 
-
-    ///  The catch state and support methods
     BOOST_MSM_EUML_ACTION(catch_entry_action)
     {
         template <class Event, class FSM, class STATE>
@@ -131,7 +141,7 @@ namespace
         CATCH == FLIGHT + catchEvent,
         DWELL == CATCH + caughtEvent,
         FLIGHT + tickEvent / tick_action,
-        CATCH + tickEvent / dropped_action,
+        CATCH + tickEvent / catch_missed_action,
         DWELL + tickEvent
     ), prop_in_play_transition_table)
     // The declaration of the IN_PLAY state machine type
@@ -157,7 +167,7 @@ namespace
         init_ << DWELL,
         inplay_entry_action,
         inplay_exit_action,
-        attributes_ << tick_ << pickup_ << tossedSlot_ << drop_,
+        attributes_ << propSM_,
         configure_ << isInPlayFlag_,
         invalid_state_transistion
     ), in_play_state_machine)
@@ -218,7 +228,7 @@ namespace
         init_ << DROPPED,
         prop_state_entry_action,
         prop_state_exit_action,
-        attributes_  << drop_ << pickup_,
+        attributes_  << propSM_,
         configure_ << no_configure_,
         invalid_state_transistion
     ), prop_state_machine)
@@ -242,18 +252,14 @@ namespace
 /**
  *
  */
-class Prop::PropStateMachine : public Base
+class Prop::StateMachine : public Base
 {
 public:
-    PropStateMachine(Prop* prop)
+    StateMachine(Prop* prop)
     {
         prop_ = prop;
-        get_attribute(pickup_) = std::bind(&Prop::PropStateMachine::pickupAction, this, std::placeholders::_1);
-        get_attribute(drop_) = std::bind(&Prop::PropStateMachine::collisionAction, this);
-        get_state<in_play_type&>().get_attribute(drop_) = std::bind(&Prop::PropStateMachine::droppedAction, this);
-        get_state<in_play_type&>().get_attribute(pickup_) = std::bind(&Prop::PropStateMachine::pickupAction, this, std::placeholders::_1);
-        get_state<in_play_type&>().get_attribute(tossedSlot_) = std::bind(&Prop::PropStateMachine::tossedAction, this, std::placeholders::_1);
-        get_state<in_play_type&>().get_attribute(tick_) = std::bind(&Prop::PropStateMachine::tickAction, this);        
+        get_attribute(propSM_) = this; 
+        get_state<in_play_type&>().get_attribute(propSM_) = this;        
     }
     /// is the current state Dropped
     bool isDropped()
@@ -295,19 +301,26 @@ public:
         prop_->connectHand(hand);    
     }   
     /// Slot for the dropped state signal from the state machine
+    void missedCatchAction()
+    {
+        DebugOut() << "Prop::PropStateMachine::missedCatchAction";
+        DropReportPtr dr(new DropReport(DropReport::DropType::CATCH_MISSED, prop_, prop_->hand_));
+        process_event(collisionEvent(dr));
+    }
+
     void droppedAction()
     {
         DebugOut() << "Prop::PropStateMachine::droppedAction";
-        process_event(collisionEvent);
+        DropReportPtr dr(new DropReport(DropReport::DropType::DROP, prop_, prop_->hand_));
+        process_event(collisionEvent(dr));
     }
 
-    void collisionAction()
+    void collisionAction(DropReportPtr dr)
     {
         DebugOut() << "Prop::PropStateMachine::collisionAction";
-        prop_->dropped_(prop_);
+        prop_->dropped_(dr);
         prop_->disconnectHand();
     }        
-
     /// Slot for the tossed action
     void tossedAction(Throw* toss)
     {
@@ -320,7 +333,7 @@ public:
             prop_->tossed_(prop_);
         }        
     }
-
+    /// tick action impl
     void tickAction()
     {
         if(prop_->toss_.decrementSiteswap()){
@@ -328,16 +341,13 @@ public:
             prop_->catch_(prop_);
         }
     }
-
-
-
 private:
     Prop* prop_;
 };
 
 /// Initializing constructor
 Prop::Prop(int id)
-:   stateMachine_(new Prop::PropStateMachine(this))
+:   stateMachine_(new Prop::StateMachine(this))
 ,   id_(id)
 ,   hand_(nullptr)
 {
@@ -359,7 +369,7 @@ const char* Prop::getStateName()
 /// Get the string for the given state
 const char* Prop::getStateName(Prop::State state)
 {
-    return Prop::PropStateMachine::getStateName(static_cast<int>(state)); 
+    return Prop::StateMachine::getStateName(static_cast<int>(state)); 
 }
 /// test for Dropped state
 bool Prop::isDropped()
@@ -388,12 +398,12 @@ void Prop::disconnectFromToss(PropSlot slot)
     tossed_.disconnect(slot);
 }
 /// Connect a slot to the Drop signal
-void Prop::connectToDrop(PropSlot slot)
+void Prop::connectToDrop(DropReportSlot slot)
 {
     dropped_.connect(slot);
 }
 /// Disconnect a slot from the Drop signal
-void Prop::disconnectFromDrop(PropSlot slot)
+void Prop::disconnectFromDrop(DropReportSlot slot)
 {
     dropped_.disconnect(slot);
 }
@@ -408,14 +418,14 @@ void Prop::disconnectFromCatch(PropSlot slot)
     catch_.disconnect(slot);
 }
 /// connect all 3 slots
-void Prop::connectToAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot)
+void Prop::connectToAll(PropSlot tossSlot, DropReportSlot dropSlot, PropSlot propSlot)
 {
     connectToToss(tossSlot);
     connectToDrop(dropSlot);
     connectToCatch(propSlot);
 }
 /// disconnect all 3 slots
-void Prop::disconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot)
+void Prop::disconnectFromAll(PropSlot tossSlot, DropReportSlot dropSlot, PropSlot propSlot)
 {
     disconnectFromToss(tossSlot);
     disconnectFromDrop(dropSlot);

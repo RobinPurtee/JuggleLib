@@ -51,19 +51,19 @@ public:
     void connectToToss(PropSlot slot);
     void disconnectFromToss(PropSlot slot);
 
-    void connectToDrop(PropSlot slot);
-    void disconnectFromDrop(PropSlot slot);
+    void connectToDrop(DropReportSlot slot);
+    void disconnectFromDrop(DropReportSlot slot);
 
     void connectToCatch(PropSlot slot);
     void disconnectFromCatch(PropSlot slot);
 
-    void connectToAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
-    void disconnectFromAll(PropSlot tossSlot, PropSlot dropSlot, PropSlot propSlot);
+    void connectToAll(PropSlot tossSlot, DropReportSlot dropSlot, PropSlot propSlot);
+    void disconnectFromAll(PropSlot tossSlot, DropReportSlot dropSlot, PropSlot propSlot);
 
     virtual std::string toString();
     virtual std::wstring toWstring();
 
-    
+    class StateMachine;    
 private:
     void connectHand(Hand* hand);
     void disconnectHand();
@@ -71,15 +71,13 @@ private:
 
     PropPublisher tossed_;
     PropPublisher catch_;
-    PropPublisher dropped_;
+    DropReportPublisher dropped_;
     Throw toss_;
     Hand* hand_;
 
     int id_;
-    class PropStateMachine;
-    std::shared_ptr<PropStateMachine> stateMachine_;
+    std::shared_ptr<Prop::StateMachine> stateMachine_;
 };
 
 typedef std::shared_ptr<Prop> PropPtr;
 typedef std::list<PropPtr> PropList;
-typedef std::forward_list<Prop*> RawPropList;

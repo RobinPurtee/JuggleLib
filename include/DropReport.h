@@ -1,12 +1,14 @@
 #pragma once
 class Prop;
 class Hand;
+#include <forward_list>
 
+typedef std::forward_list<Prop*> RawPropList;
 
 class DropReport
 {
 public:
-    enum DropType:int {CATCH_MISSED = 0, MID_AIR_COLLISION, HAND_FULL, HAND_DROPPED};
+    enum DropType:int {CATCH_MISSED = 0, MID_AIR_COLLISION, HAND_FULL, HAND_DROPPED, DROP};
 
     DropReport(DropType type, Prop* prop);
     DropReport(DropType type, Prop* prop, Hand* hand);
@@ -31,3 +33,4 @@ protected:
 
 };
 
+typedef std::shared_ptr<DropReport> DropReportPtr;

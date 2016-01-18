@@ -7,6 +7,8 @@ using namespace boost::msm::front::euml;
 
 class Hand;
 class Throw;
+class DropReport;
+
 
 namespace CommonStateMachine
 {
@@ -15,13 +17,15 @@ namespace CommonStateMachine
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(int, Aid)
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Prop*, Aprop)
     BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Hand*, Ahand)
+    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(std::shared_ptr<DropReport>, dropReportPtr_)
 
     BOOST_MSM_EUML_ATTRIBUTES((attributes_ << Atoss ), tossAttributes);
     BOOST_MSM_EUML_ATTRIBUTES((attributes_ << Aprop ), propAttributes);
     BOOST_MSM_EUML_ATTRIBUTES((attributes_ << Ahand ), handAttributes);
+    BOOST_MSM_EUML_ATTRIBUTES((attributes_ << dropReportPtr_), dropAttributes);
 
     BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(tossEvent, tossAttributes)
-    BOOST_MSM_EUML_EVENT(collisionEvent)
+    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(collisionEvent, dropAttributes)
     BOOST_MSM_EUML_EVENT(tickEvent)
 
     BOOST_MSM_EUML_ACTION(dwell_entry_action)
