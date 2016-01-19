@@ -360,8 +360,9 @@ struct Hand::StateMachine : public Base
     /// hand drop action impl
     void dropAction()
     {
+        DropReportPtr drop(new DropReport(DropReport::DropType::HAND_DROPPED, handPtr_->propCatching_, handPtr_));
         for(Prop* p : handPtr_->props_){
-            p->Collision();
+            p->Collision(drop);
         }
         handPtr_->props_.clear();
         handPtr_->toss_ = nullptr;
@@ -375,7 +376,8 @@ struct Hand::StateMachine : public Base
     void collisionAction(Prop* prop)
     {
         if(nullptr != prop){
-            prop->Collision();
+            DropReportPtr drop(new DropReport(DropReport::DropType::HAND_DROPPED, handPtr_->propCatching_, handPtr_));
+            prop->Collision(drop);
         }
     }
 
@@ -463,7 +465,7 @@ void Hand::Caught()
         }
 
 }
-/// PropSlot for a signal that the Prop has been dropped
+/// force a drop from the hand
 void Hand::Drop()
 {
     DebugOut() << "Hand::Drop - " << std::endl << toString();

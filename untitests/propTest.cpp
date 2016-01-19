@@ -36,10 +36,15 @@ namespace untitests
                 DebugOut() << "In Catch callback: " << prop->toString();
             }
 
-            void Dropped(DropReportPtr drp)
+            void Dropped(DropReportPtr drop)
             {
                 has_dropped_ = true;
-                DebugOut() << "In Dropped callback: " << drp->toString();
+                if(drop){
+                    DebugOut() << "In Dropped callback: " << drop->toString();
+                }
+                else{
+                    DebugOut() << "No DropReport in the Dropped signal" << std::endl;
+                }
             }
 
             bool has_tossed_;
@@ -143,7 +148,7 @@ namespace untitests
             Assert::IsTrue(responder.has_caught_, L"The Catch did not trigger the catch notification");
             Assert::IsFalse(prop.isDropped(), L"Prop has dropped during catch");
             Assert::IsFalse(prop.isInFlight(), L"Prop thinks it is still in flight when should be Dwell");
-            prop.Collision();
+            prop.Collision(DropReportPtr(new DropReport(DropReport::DropType::DROP, &prop)));
             DebugOut() << "After Collision: " << prop.toString();
             Assert::IsTrue(responder.has_dropped_, L"Prop has not sent the drop notification");
             Assert::IsTrue(prop.isDropped(), L"The Prop was not dropped by the collision");
@@ -162,7 +167,7 @@ namespace untitests
             prop.Toss(pass);
             Assert::IsTrue(responder.has_tossed_, L"Prop did not trick the tossed notification");
             Assert::IsTrue(prop.isInFlight(), L"Prop is not in Flight");
-            prop.Collision();
+            prop.Collision(DropReportPtr(new DropReport(DropReport::DropType::DROP, &prop)));
             Assert::IsTrue(responder.has_dropped_, L"Prop has not sent the drop notification");
             Assert::IsTrue(prop.isDropped(), L"The Prop was not dropped by the collision");
         }

@@ -6,7 +6,8 @@ const char* DropTypeNames[] = {
     "Prop missed by a catch", 
     "Prop collision",
     "The hand having Prop in it", 
-    "Hand dropped the Prop"
+    "Hand dropped the Prop",
+    "Generic drop"
 };
 
 /// initializing constructor type and prop
@@ -38,7 +39,12 @@ Prop* DropReport::getProp(int id)
 RawPropList::iterator DropReport::getProps(){return props_.begin();}
 
 /// Add a Prop the the Prop list
-void DropReport::addProp(Prop* prop)        {props_.push_front(prop);}
+void DropReport::addProp(Prop* prop)        
+{
+    if(nullptr != prop){
+        props_.push_front(prop);
+    }
+}
 /// set the hand involved
 Hand* DropReport::getHand()                 {return hand_;}
 /// get the hand involved

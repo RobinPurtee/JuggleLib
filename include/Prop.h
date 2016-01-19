@@ -42,7 +42,7 @@ public:
 
     void Caught();
 
-    void Collision();
+    void Collision(DropReportPtr drop);
 
     void Pickup(Hand* hand);
 

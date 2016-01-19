@@ -450,9 +450,9 @@ void Prop::Caught()
 }
 
 /// drop the prop
-void Prop::Collision()
+void Prop::Collision(DropReportPtr drop)
 {
-    stateMachine_->process_event(CommonStateMachine::collisionEvent);
+    stateMachine_->process_event(CommonStateMachine::collisionEvent(drop));
 }
 /// The prop has been picked up by the given hand
 void Prop::Pickup(Hand* hand)
