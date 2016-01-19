@@ -70,7 +70,7 @@ namespace
         }
     };
     /// dropped action - this forces the state machine into dropped state
-    BOOST_MSM_EUML_ACTION(dropped_action)
+    BOOST_MSM_EUML_ACTION(collision_action)
     {
         template <class FSM, class EVT, class SourceState, class TargetState>
         void operator()(EVT const& evt, FSM& fsm, SourceState& source, TargetState& target )
@@ -89,7 +89,6 @@ namespace
             fsm.get_attribute(propSM_)->missedCatchAction();
         }
     };
-
     BOOST_MSM_EUML_ACTION(catch_entry_action)
     {
         template <class Event, class FSM, class STATE>
@@ -203,7 +202,7 @@ namespace
     BOOST_MSM_EUML_TRANSITION_TABLE(
     (
         IN_PLAY == DROPPED + pickupEvent / pickup_action,
-        DROPPED == IN_PLAY + collisionEvent / dropped_action
+        DROPPED == IN_PLAY + collisionEvent / collision_action
     ), prop_transition_table)
     /// The declaration of the actual state machine type
     BOOST_MSM_EUML_ACTION(prop_state_entry_action)
@@ -312,7 +311,9 @@ public:
     {
         DebugOut() << "Prop::PropStateMachine::droppedAction";
         DropReportPtr dr(new DropReport(DropReport::DropType::DROP, prop_, prop_->hand_));
-        process_event(collisionEvent(dr));
+        if(!isDropped()){
+            process_event(collisionEvent(dr));
+        }
     }
 
     void collisionAction(DropReportPtr dr)
@@ -493,11 +494,8 @@ void Prop::connectHand(Hand* hand)
         disconnectHand();
     }
     hand_ = hand;
-    PropSlot slot(nullptr);
-    slot = (std::bind(&Hand::Catch, hand_, std::placeholders::_1));
+    PropSlot slot(std::bind(&Hand::Catch, hand_, std::placeholders::_1));
     connectToCatch(slot);
-    //slot = (std::bind(&Hand::Collision, hand_));
-    //connectToDrop(slot);
 }
 // Disconnect the state signals from the hand
 void Prop::disconnectHand()
@@ -505,11 +503,8 @@ void Prop::disconnectHand()
     if(nullptr == hand_){
         return;
     }
-    PropSlot slot(nullptr);
-    slot = (std::bind(&Hand::Catch, hand_, std::placeholders::_1));
+    PropSlot slot(std::bind(&Hand::Catch, hand_, std::placeholders::_1));
     disconnectFromCatch(slot);
-    //slot = (std::bind(&Hand::Collision, hand_));
-    //disconnectFromDrop(slot);
     hand_ = nullptr;
 }
 

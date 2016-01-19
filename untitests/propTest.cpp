@@ -13,7 +13,9 @@ namespace untitests
     TEST_CLASS(PropTests)
     {
         static const int test_id_ = 0xdeadbeef;
-
+        /**
+         * Class to provide slots for the signals from the Prop Class
+         */
         class PropResponder 
         {
         public:
@@ -23,6 +25,12 @@ namespace untitests
             , has_dropped_(false)
             {}
 
+            void connect_prop(Prop& prop)
+            {
+                prop.connectToToss(std::bind(&PropResponder::Tossed, this, std::placeholders::_1));
+                prop.connectToDrop(std::bind(&PropResponder::Dropped, this, std::placeholders::_1));
+                prop.connectToCatch(std::bind(&PropResponder::Catch, this, std::placeholders::_1));
+            }
 
             void Tossed(Prop* prop)
             {
@@ -55,13 +63,6 @@ namespace untitests
         };
 
 
-        void connect_prop_responder(Prop& prop, PropResponder* responder)
-        {
-            prop.connectToToss(std::bind(&PropResponder::Tossed, responder, std::placeholders::_1));
-            prop.connectToDrop(std::bind(&PropResponder::Dropped, responder, std::placeholders::_1));
-            prop.connectToCatch(std::bind(&PropResponder::Catch, responder, std::placeholders::_1));
-        }
-
 
         void run_til_catch(Prop& prop, PropResponder& responder)
         {
@@ -91,7 +92,7 @@ namespace untitests
             PropResponder responder;
             Prop prop(test_id_);
 
-            connect_prop_responder(prop, &responder);
+            responder.connect_prop(prop);
             run_til_catch(prop, responder);
             prop.Tick();
             DebugOut() << "propTest::test_drop: After Dropping Tick state: " << prop.toString(); 
@@ -103,7 +104,7 @@ namespace untitests
             PropResponder responder;
             Prop prop(test_id_);
 
-            connect_prop_responder(prop, &responder);
+            responder.connect_prop(prop);
             run_til_catch(prop, responder);
             prop.Caught();
             Assert::IsFalse(responder.has_dropped_, L"The prop was dropped");
@@ -114,7 +115,7 @@ namespace untitests
             PropResponder responder;
             Prop prop(test_id_);
 
-            connect_prop_responder(prop, &responder);
+            responder.connect_prop(prop);
   
             Assert::IsTrue(prop.isDropped(), L"The did not start on the ground");
             prop.Caught();
@@ -128,7 +129,7 @@ namespace untitests
             int siteswap(1);
             Throw pass(siteswap, nullptr);
 
-            connect_prop_responder(prop, &responder);
+            responder.connect_prop(prop);
 
             DebugOut() << "Initial state: " << prop.toString();
             prop.Pickup(nullptr);
@@ -161,7 +162,7 @@ namespace untitests
             int siteswap(1);
             Throw pass(siteswap, nullptr);
 
-            connect_prop_responder(prop, &responder);
+            responder.connect_prop(prop);
 
             prop.Pickup(nullptr);
             prop.Toss(pass);
@@ -179,7 +180,7 @@ namespace untitests
             int siteswap(1);
             Throw pass(siteswap, nullptr);
 
-            connect_prop_responder(prop, &responder);
+            responder.connect_prop(prop);
 
             prop.Pickup(nullptr);
             DebugOut() << "After Pickup: " << prop.toString();

@@ -8,18 +8,17 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 static std::wstring_convert<std::codecvt_utf8<wchar_t>> widend;
 
-
+/// Default construture
 TestHand::TestHand()
 :   Hand(0)
 {
 }
-
+/// Initilizing constructure
 TestHand::TestHand(int id)
 :   Hand(id)
 {
 }
-
-
+/// destructor
 TestHand::~TestHand(void)
 {
 }
@@ -64,12 +63,10 @@ void TestHand::assertPropState(Prop* prop, Prop::State state)
     Assert::IsTrue(prop->getState() == state, widend.from_bytes(message.str().c_str()).c_str());
 }
 
-
 void TestHand::assertPropState(int id, Prop::State state)
 {
     assertPropState(getProp(id), state);
 }
-
 
 void TestHand::assertStates(Hand::State handState, Prop::State state0)
 {
@@ -95,7 +92,6 @@ void TestHand::assertStates(Hand::State handState, PropStateList propStates)
         ++stateItr;
     }
 }
-
 
 void TestHand::assertNumberOfProps(int num)
 {
