@@ -2,6 +2,7 @@
 #include "JuggleLib.h"
 #include "Hand.h"
 #include <array>
+using namespace JuggleLib;
 
 typedef std::array<Prop::State, 5> PropStateList;
 

@@ -7,6 +7,7 @@
 #include "DebugStringStream.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+using namespace JuggleLib;
 
 namespace untitests
 {		

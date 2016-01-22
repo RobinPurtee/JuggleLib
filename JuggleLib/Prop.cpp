@@ -5,6 +5,9 @@
 #include <iostream>
 #include <typeinfo>
 
+namespace JuggleLib
+{
+    namespace std = ::std;
 
 
 namespace 
@@ -508,3 +511,4 @@ void Prop::disconnectHand()
     hand_ = nullptr;
 }
 
+}

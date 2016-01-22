@@ -1,57 +1,61 @@
 #pragma once
 #include <list>
 #include <deque>
-class Throw;
-class Prop;
-
-
-class Hand
+namespace JuggleLib
 {
-public:
+    namespace std = ::std;
 
-    enum class State:int { VACANT = 0, DWELL, TOSS, CATCH };
-
-    Hand(int id);
-    ~Hand(void);
-
-    int getId();
-
-    Hand::State getState();
-     /** 
-     * Get the string of the current state name
-     */
-    const char* getStateName();
-    static const char* getStateName(Hand::State state);
+    class Throw;
+    class Prop;
 
 
-    void Pickup(Prop* prop);
+    class Hand
+    {
+    public:
 
-    virtual void Toss(Throw* toss);
-    virtual void Release();
+        enum class State:int { VACANT = 0, DWELL, TOSS, CATCH };
 
-    bool isVacant();
+        Hand(int id);
+        ~Hand(void);
 
-    void Catch(Prop* prop);
-    void Caught();
+        int getId();
 
-    void Drop();
-    void Collect();
+        Hand::State getState();
+         /** 
+         * Get the string of the current state name
+         */
+        const char* getStateName();
+        static const char* getStateName(Hand::State state);
 
-    virtual std::string toString();
-    virtual std::wstring toWstring();
 
-    struct StateMachine;
-protected:
-    Prop* propCatching_;
-    // the following is a debugging function
-    int getNumberOfProps()  {return props_.size();}
-private:
+        void Pickup(Prop* prop);
 
-    std::deque<Prop*> props_;
-    Throw* toss_;
-    int id_;
+        virtual void Toss(Throw* toss);
+        virtual void Release();
 
-    std::shared_ptr<StateMachine> stateMachine_;
+        bool isVacant();
 
-};
+        void Catch(Prop* prop);
+        void Caught();
 
+        void Drop();
+        void Collect();
+
+        virtual std::string toString();
+        virtual std::wstring toWstring();
+
+        struct StateMachine;
+    protected:
+        Prop* propCatching_;
+        // the following is a debugging function
+        int getNumberOfProps()  {return props_.size();}
+    private:
+
+        std::deque<Prop*> props_;
+        Throw* toss_;
+        int id_;
+
+        std::shared_ptr<StateMachine> stateMachine_;
+
+    };
+}

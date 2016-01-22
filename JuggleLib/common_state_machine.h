@@ -5,44 +5,47 @@
 namespace msm = boost::msm;
 using namespace boost::msm::front::euml;
 
-class Hand;
-class Throw;
-class DropReport;
-
-
-namespace CommonStateMachine
+namespace JuggleLib
 {
+    class Hand;
+    class Throw;
+    class DropReport;
 
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Throw*, Atoss)
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(int, Aid)
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Prop*, Aprop)
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Hand*, Ahand)
-    BOOST_MSM_EUML_DECLARE_ATTRIBUTE(std::shared_ptr<DropReport>, dropReportPtr_)
 
-    BOOST_MSM_EUML_ATTRIBUTES((attributes_ << Atoss ), tossAttributes);
-    BOOST_MSM_EUML_ATTRIBUTES((attributes_ << Aprop ), propAttributes);
-    BOOST_MSM_EUML_ATTRIBUTES((attributes_ << Ahand ), handAttributes);
-    BOOST_MSM_EUML_ATTRIBUTES((attributes_ << dropReportPtr_), dropAttributes);
-
-    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(tossEvent, tossAttributes)
-    BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(collisionEvent, dropAttributes)
-    BOOST_MSM_EUML_EVENT(tickEvent)
-
-    BOOST_MSM_EUML_ACTION(dwell_entry_action)
+    namespace CommonStateMachine
     {
-        template <class Event, class FSM, class STATE>
-        void operator()(Event const& evt, FSM& fsm, STATE& state)
+
+        BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Throw*, Atoss)
+        BOOST_MSM_EUML_DECLARE_ATTRIBUTE(int, Aid)
+        BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Prop*, Aprop)
+        BOOST_MSM_EUML_DECLARE_ATTRIBUTE(Hand*, Ahand)
+        BOOST_MSM_EUML_DECLARE_ATTRIBUTE(std::shared_ptr<DropReport>, dropReportPtr_)
+
+        BOOST_MSM_EUML_ATTRIBUTES((attributes_ << Atoss ), tossAttributes);
+        BOOST_MSM_EUML_ATTRIBUTES((attributes_ << Aprop ), propAttributes);
+        BOOST_MSM_EUML_ATTRIBUTES((attributes_ << Ahand ), handAttributes);
+        BOOST_MSM_EUML_ATTRIBUTES((attributes_ << dropReportPtr_), dropAttributes);
+
+        BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(tossEvent, tossAttributes)
+        BOOST_MSM_EUML_EVENT_WITH_ATTRIBUTES(collisionEvent, dropAttributes)
+        BOOST_MSM_EUML_EVENT(tickEvent)
+
+        BOOST_MSM_EUML_ACTION(dwell_entry_action)
         {
-            DebugOut() << "entered DWELL state";
-        }
-    };
-    BOOST_MSM_EUML_ACTION(dwell_exit_action)
-    {
-        template <class Event, class FSM, class STATE>
-        void operator()(Event const& evt, FSM& fsm, STATE& state)
+            template <class Event, class FSM, class STATE>
+            void operator()(Event const& evt, FSM& fsm, STATE& state)
+            {
+                DebugOut() << "entered DWELL state";
+            }
+        };
+        BOOST_MSM_EUML_ACTION(dwell_exit_action)
         {
-            DebugOut() << "exited DWELL state";
-        }
-    };
-    BOOST_MSM_EUML_STATE((dwell_entry_action, dwell_exit_action), DWELL)
+            template <class Event, class FSM, class STATE>
+            void operator()(Event const& evt, FSM& fsm, STATE& state)
+            {
+                DebugOut() << "exited DWELL state";
+            }
+        };
+        BOOST_MSM_EUML_STATE((dwell_entry_action, dwell_exit_action), DWELL)
+    }
 }

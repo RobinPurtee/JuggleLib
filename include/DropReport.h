@@ -1,36 +1,41 @@
 #pragma once
-class Prop;
-class Hand;
 #include <forward_list>
 
-typedef std::forward_list<Prop*> RawPropList;
-
-class DropReport
+namespace JuggleLib
 {
-public:
-    enum DropType:int {CATCH_MISSED = 0, MID_AIR_COLLISION, HAND_FULL, HAND_DROPPED, DROP};
+    class Prop;
+    class Hand;
+    namespace std = ::std;
 
-    DropReport(DropType type, Prop* prop);
-    DropReport(DropType type, Prop* prop, Hand* hand);
-    virtual ~DropReport(void);
+    typedef std::forward_list<Prop*> RawPropList;
 
-    DropType getType();
+    class DropReport
+    {
+    public:
+        enum DropType:int {CATCH_MISSED = 0, MID_AIR_COLLISION, HAND_FULL, HAND_DROPPED, DROP};
 
-    Prop* getProp(int id);
-    RawPropList::iterator getProps();
-    void  addProp(Prop* prop);
+        DropReport(DropType type, Prop* prop);
+        DropReport(DropType type, Prop* prop, Hand* hand);
+        virtual ~DropReport(void);
+
+        DropType getType();
+
+        Prop* getProp(int id);
+        RawPropList::iterator getProps();
+        void  addProp(Prop* prop);
     
-    Hand* getHand();
-    void  setHand(Hand* hand);
+        Hand* getHand();
+        void  setHand(Hand* hand);
 
-    virtual std::string  toString();
-    virtual std::wstring toWString();
+        virtual std::string  toString();
+        virtual std::wstring toWString();
 
-protected:
-    DropType type_;
-    Hand* hand_;
-    RawPropList props_;
+    protected:
+        DropType type_;
+        Hand* hand_;
+        RawPropList props_;
 
-};
+    };
 
-typedef std::shared_ptr<DropReport> DropReportPtr;
+    typedef std::shared_ptr<DropReport> DropReportPtr;
+}
