@@ -12,7 +12,6 @@ namespace JuggleLib
     class Hand;
     class Throw;
 
-    typedef boost::signals2::signal<void()> tickPublisher;
     typedef boost::signals2::signal<void(int)> IdPublisher;
     typedef boost::signals2::signal<void(Prop*)> PropPublisher;
     typedef boost::signals2::signal<void(Hand*)> handPublisher;

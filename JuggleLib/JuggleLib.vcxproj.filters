@@ -26,8 +26,8 @@
     <ClInclude Include="common_state_machine.h" />
     <ClInclude Include="..\include\JuggleLib.h" />
     <ClInclude Include="..\include\Throw.h" />
-    <ClInclude Include="PropClock.h" />
     <ClInclude Include="..\include\DropReport.h" />
+    <ClInclude Include="..\include\Ticker.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

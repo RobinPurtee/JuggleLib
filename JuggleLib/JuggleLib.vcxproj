@@ -161,9 +161,9 @@
     <ClInclude Include="..\include\JuggleLib.h" />
     <ClInclude Include="..\include\Throw.h" />
     <ClInclude Include="..\include\Prop.h" />
+    <ClInclude Include="..\include\Ticker.h" />
     <ClInclude Include="common_state_machine.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="PropClock.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Trajectory.h" />
   </ItemGroup>
