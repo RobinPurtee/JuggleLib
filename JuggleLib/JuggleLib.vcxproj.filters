@@ -15,6 +15,7 @@
     <ClCompile Include="DropException.cpp" />
     <ClCompile Include="Throw.cpp" />
     <ClCompile Include="DropReport.cpp" />
+    <ClCompile Include="Ticker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

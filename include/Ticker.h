@@ -9,7 +9,9 @@ namespace JuggleLib
 
     typedef std::chrono::duration<int, std::milli> millisecond;
     /**
-     * This class contains a void() signal that is call each tick
+     * This class emittes a signal every duration of milliseconds while running.
+     * The signal is emitted from on its own thread. The Slot handler must handle
+     * any threading issues.
      */
     class Ticker
     {
@@ -33,6 +35,9 @@ namespace JuggleLib
         void RemoveTickResponder(Slot tickSlot);
 
     private:
+        void Tick();
+
+
         millisecond period_;
         TickPublisher tick_;
         std::shared_ptr<std::thread> ticker_;

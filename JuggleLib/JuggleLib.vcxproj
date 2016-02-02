@@ -180,6 +180,7 @@
     </ClCompile>
     <ClCompile Include="Prop.cpp" />
     <ClCompile Include="Throw.cpp" />
+    <ClCompile Include="Ticker.cpp" />
     <ClCompile Include="Trajectory.cpp" />
   </ItemGroup>
   <ItemGroup>
