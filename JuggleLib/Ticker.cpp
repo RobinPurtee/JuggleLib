@@ -30,30 +30,32 @@ namespace JuggleLib
 
     void Ticker::Start()
     {
-        ticker_ = new std::thread<
+        ticker_ = new std::thread<void()>(std::bind(&Ticker::Tick, this));
 
     }
 
     void Ticker::Stop()
     {
     }
-
+    /// Add a tick slot to the ticker
     Ticker::Connection Ticker::AddTickResponder(Ticker::Slot tickSlot)
     {
+        return tick_.connect(tickSlot);
     }
-
+    /// remove a connection from the ticker
     void Ticker::RemoveTickResponder(Ticker::Connection connector)
     {
-
+        tick_.disconnect(connector);
     }
-
+    /// remove a slot from the ticker
     void Ticker::RemoveTickResponder(Ticker::Slot tickSlot)
     {
+        tick_.disconnect(tickSlot);
     }
-
+    /// the ticker threand method
     void Ticker::Tick()
     {
-        while(keepTicking && !tick_.empty()){
+        while(keepTicking_ && !tick_.empty()){
             std::this_thread::sleep_for(period_);
             tick_();
     }
