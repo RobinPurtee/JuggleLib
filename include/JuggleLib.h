@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <tchar.h>
 #include <string>
+#include <mutex>
+#include <condition_variable>
 
 #include <boost\signals2.hpp>
 #include "DropReport.h"
@@ -8,9 +10,10 @@ namespace JuggleLib
 {
     namespace std = ::std;
     namespace boost = ::boost;
-    class Prop;
-    class Hand;
     class Throw;
+
+    typedef std::lock_guard<std::mutex> CriticalSection;
+
 
     typedef boost::signals2::signal<void(int)> IdPublisher;
     typedef boost::signals2::signal<void(Prop*)> PropPublisher;

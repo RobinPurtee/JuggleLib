@@ -1,3 +1,4 @@
+#include <mutex>
 #pragma once
  namespace JuggleLib
 {
@@ -26,6 +27,7 @@
 
 
     private:
+        std::mutex lock_; 
         int siteswap_;
         Hand* destination_;
     };
