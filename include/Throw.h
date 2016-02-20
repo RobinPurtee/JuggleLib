@@ -16,6 +16,9 @@
     public:
         Throw();
         Throw(int swap, Hand* dest); 
+        Throw(const Throw& rhs);
+
+        Throw& operator=(const Throw& rhs);
         int getSiteswap()           {return siteswap_;}
         Hand* getDestination()      {return destination_;}
         /// clear the throw of data

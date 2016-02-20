@@ -2,12 +2,12 @@
 #include <functional>
 #include <chrono>
 #include <boost/signals2.hpp>
+#include <thread>
 
 namespace JuggleLib
 {
     namespace std = ::std;
 
-    typedef std::chrono::duration<int, std::milli> millisecond;
     /**
      * This class emittes a signal every duration of milliseconds while running.
      * The signal is emitted from on its own thread. The Slot handler must handle
@@ -15,27 +15,25 @@ namespace JuggleLib
      */
     class Ticker
     {
-        typedef boost::signals2::signal<void()> TickPublisher;
     public:
-
-        typedef std::function<void(TickPublisher&, millisecond)> Slot;
+        typedef boost::signals2::signal<void()> TickPublisher;
         typedef boost::signals2::connection Connection;
 
         Ticker();
-        Ticker(millisecond period);
+        Ticker(std::chrono::milliseconds period);
 
         virtual ~Ticker();
 
-        millisecond getPeriod()             {return period_;}
-        void setPeriod(millisecond p);
+        std::chrono::milliseconds getPeriod()             {return period_;}
+        void setPeriod(std::chrono::milliseconds p);
 
         void Start();
         bool IsRunning();
         void Stop();
 
-        Connection AddTickResponder(Slot tickSlot);
-        void RemoveTickResponder(Connection connector);
-        void RemoveTickResponder(Slot tickSlot);
+        Connection AddTickResponder(TickPublisher::slot_type& tickSlot);
+        void RemoveTickResponder(Connection& connector);
+        //void RemoveTickResponder(TickPublisher::slot_type& tickSlot);
 
     protected:
         bool KeepTicking();
@@ -46,12 +44,12 @@ namespace JuggleLib
         std::mutex tickingMutex_;
         std::condition_variable tickingCondition_;
 
-        void Tick(TickPublisher& tick, millisecond period);
+        void Tick(std::chrono::milliseconds period);
 
 
-        millisecond period_;
+        std::chrono::milliseconds period_;
         TickPublisher tick_;
-        std::shared_ptr<std::thread> ticker_;
+        std::thread* ticker_;
         std::exception_ptr exceptionPtr_;
         // noncopy 
         Ticker(const Ticker&);
