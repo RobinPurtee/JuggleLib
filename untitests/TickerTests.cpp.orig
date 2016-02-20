@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
+<<<<<<< HEAD
 #include "JuggleLib.h"
 #include "Ticker.h"
 #include "DebugStringStream.h"
@@ -8,6 +9,13 @@
 #include <atomic>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+using namespace JuggleLib;
+=======
+#include "Ticker.h"
+#include "DebugStringStream.h"
+
+using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+>>>>>>> 8766ac2e36aede89a59025da2cf9f30d85fd8e90
 
 namespace untitests
 {
@@ -25,11 +33,18 @@ namespace untitests
             ticked_.notify_all();              
         }
         /// wait for Ticked to be called num of times
+<<<<<<< HEAD
+        void WaitUntilTicked(int num)
+        {
+            std::unique_lock<std::mutex> ul(tickedMutex_);
+                ticked_.wait(ul, [&]{return hasTicked_.load() && num >= numTicked_.load();});
+=======
         bool WaitUntilTicked(int num)
         {
             std::unique_lock<std::mutex> ul(tickedMutex_);
             ticked_.wait(ul, [&]{return hasTicked_.load() && num >= numTicked_.load();});
             return true;
+>>>>>>> 8766ac2e36aede89a59025da2cf9f30d85fd8e90
         }
 
     public:
@@ -43,6 +58,17 @@ namespace untitests
 
         TEST_METHOD(SingleTickTest)
         {
+<<<<<<< HEAD
+            Ticker ticker(std::chrono::milliseconds(5000));
+
+            auto slot = std::bind(&TickerTests::Ticked, this);
+            ticker.AddTickResponder(slot);
+            DebugOut() << "Start wait" << std::endl;
+            ticker.Start();
+            WaitUntilTicked(1);
+            ticker.Stop();
+            DebugOut() << "Ticked" << std::endl;
+=======
             JuggleLib::Ticker ticker(std::chrono::milliseconds(1000));
 
             //JuggleLib::Ticker::TickPublisher::slot_type& slot = std::bind(&TickerTests::Ticked, this);
@@ -55,6 +81,7 @@ namespace untitests
              DebugOut() << "stop Ticker" << std::endl;
 
 
+>>>>>>> 8766ac2e36aede89a59025da2cf9f30d85fd8e90
         }
 
     };

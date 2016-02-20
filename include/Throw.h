@@ -11,7 +11,7 @@
      * to provide the actions of the pattern
      *
      */
-    class Throw
+    class Throw 
     {
     public:
         Throw();

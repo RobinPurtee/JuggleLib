@@ -40,9 +40,14 @@ namespace JuggleLib
     {
         if(!IsRunning()){
             keepTicking_ = true;
-            auto functor = std::bind(&Ticker::Tick, this, std::placeholders::_1, std::placeholders::_2);
-            std::thread* thr = new std::thread(functor, tick_, period_);
-            ticker_ = std::make_shared<std::thread>(thr);
+<<<<<<< HEAD
+            auto functor = std::bind(&Ticker::Tick, this, std::placeholders::_1);
+            ticker_ = new std::thread(functor, period_);
+=======
+            //auto functor = std::bind<void(std::chrono::milliseconds)>(&Ticker::Tick, this, std::placeholders::_1);
+            //std::thread* thr = new std::thread(&Ticker::Tick, this, period_);
+            ticker_ = new std::thread(&Ticker::Tick, this, period_);
+>>>>>>> 8766ac2e36aede89a59025da2cf9f30d85fd8e90
         }
         else{
             throw std::runtime_error("Ticker can only be started once");
@@ -58,6 +63,11 @@ namespace JuggleLib
     {
         CriticalSection cs(tickingMutex_);
         keepTicking_ = false;
+<<<<<<< HEAD
+        if(!ticker_){
+=======
+        if(nullptr != ticker_){
+>>>>>>> 8766ac2e36aede89a59025da2cf9f30d85fd8e90
             if(ticker_->joinable()){
                 ticker_->join();
             }
@@ -66,7 +76,11 @@ namespace JuggleLib
         }
     }
     /// Add a tick slot to the ticker
-    Ticker::Connection Ticker::AddTickResponder(Ticker::Slot tickSlot)
+<<<<<<< HEAD
+    Ticker::Connection Ticker::AddTickResponder(Ticker::TickPublisher::slot_type& tickSlot)
+=======
+    Ticker::Connection Ticker::AddTickResponder(const Ticker::Slot& tickSlot)
+>>>>>>> 8766ac2e36aede89a59025da2cf9f30d85fd8e90
     {
         return tick_.connect(tickSlot);
     }
@@ -94,10 +108,19 @@ namespace JuggleLib
     {
         try{
             std::unique_lock<std::mutex> ul(tickingMutex_);
+<<<<<<< HEAD
 
-            std::unique_lock<std::mutex> ul(tickingMutex_);
-            while(KeepTicking() && std::cv_status::timeout == tickingCondition_.wait_for(ul, period)){
+            while(KeepTicking()){
+                if(std::cv_status::timeout == tickingCondition_.wait_for(ul, period)){
                     tick_();
+                }
+                else{
+                    break;
+                }
+=======
+            while(KeepTicking() && std::cv_status::timeout == tickingCondition_.wait_for(ul, period)){
+                tick_();
+>>>>>>> 8766ac2e36aede89a59025da2cf9f30d85fd8e90
             }
         }
         catch(...){

@@ -2,9 +2,12 @@
 #include <functional>
 #include <chrono>
 #include <boost/signals2.hpp>
+<<<<<<< HEAD
+=======
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
+>>>>>>> 8766ac2e36aede89a59025da2cf9f30d85fd8e90
 #include <thread>
 
 namespace JuggleLib
@@ -19,9 +22,13 @@ namespace JuggleLib
     class Ticker
     {
     public:
-
+<<<<<<< HEAD
         typedef boost::signals2::signal<void()> TickPublisher;
+=======
+
+        typedef boost::signals2::signal<void()> TickPublisher;  
         typedef std::function<void()> Slot;
+>>>>>>> 8766ac2e36aede89a59025da2cf9f30d85fd8e90
         typedef boost::signals2::connection Connection;
 
         Ticker();
@@ -36,7 +43,11 @@ namespace JuggleLib
         bool IsRunning();
         void Stop();
 
+<<<<<<< HEAD
+        Connection AddTickResponder(TickPublisher::slot_type& tickSlot);
+=======
         Connection AddTickResponder(const Slot& tickSlot);
+>>>>>>> 8766ac2e36aede89a59025da2cf9f30d85fd8e90
         void RemoveTickResponder(Connection& connector);
         //void RemoveTickResponder(TickPublisher::slot_type& tickSlot);
 
