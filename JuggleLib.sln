@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "untitests", "untitests\unti
 		{7CA8B697-9475-4E18-88F9-902F3C42D71D} = {7CA8B697-9475-4E18-88F9-902F3C42D71D}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TimerPlay", "TimerPlay\TimerPlay.vcxproj", "{4107F3B3-EA0F-49D7-B1D4-08247592957D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -41,6 +43,12 @@ Global
 		{EFFE40D5-A62A-40A8-9F48-42A3E7EAACB8}.Release|Win32.ActiveCfg = Release|Win32
 		{EFFE40D5-A62A-40A8-9F48-42A3E7EAACB8}.Release|Win32.Build.0 = Release|Win32
 		{EFFE40D5-A62A-40A8-9F48-42A3E7EAACB8}.Release|x64.ActiveCfg = Release|Win32
+		{4107F3B3-EA0F-49D7-B1D4-08247592957D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4107F3B3-EA0F-49D7-B1D4-08247592957D}.Debug|Win32.Build.0 = Debug|Win32
+		{4107F3B3-EA0F-49D7-B1D4-08247592957D}.Debug|x64.ActiveCfg = Debug|Win32
+		{4107F3B3-EA0F-49D7-B1D4-08247592957D}.Release|Win32.ActiveCfg = Release|Win32
+		{4107F3B3-EA0F-49D7-B1D4-08247592957D}.Release|Win32.Build.0 = Release|Win32
+		{4107F3B3-EA0F-49D7-B1D4-08247592957D}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

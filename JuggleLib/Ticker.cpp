@@ -9,11 +9,15 @@ namespace JuggleLib
     /// default constructor
     Ticker::Ticker()
     : period_(1)
+    , ticker_(nullptr)
+    , keepTicking_(false)
     {}
 
     /// Initializing constructor
-    Ticker::Ticker(millisecond period)
+    Ticker::Ticker(std::chrono::milliseconds period)
     : period_(period)
+    , ticker_(nullptr)
+    , keepTicking_(false)
     {}
     /// Destructor
     Ticker::~Ticker()
@@ -27,7 +31,7 @@ namespace JuggleLib
     /// The period of the ticker is the period at the point the ticker is started
     /// If the period is changed once started the new period will not take effect
     /// until the ticker is stopped and re-started.
-    void Ticker::setPeriod(millisecond p)
+    void Ticker::setPeriod(std::chrono::milliseconds p)
     {
         period_ = p;
     }
@@ -36,9 +40,9 @@ namespace JuggleLib
     {
         if(!IsRunning()){
             keepTicking_ = true;
-            auto functor = std::bind(&Ticker::Tick, this, std::placeholders::_1, std::placeholders::_2);
-            std::thread* thr = new std::thread(functor, tick_, period_);
-            ticker_ = std::make_shared<std::thread>(thr);
+            //auto functor = std::bind<void(std::chrono::milliseconds)>(&Ticker::Tick, this, std::placeholders::_1);
+            //std::thread* thr = new std::thread(&Ticker::Tick, this, period_);
+            ticker_ = new std::thread(&Ticker::Tick, this, period_);
         }
         else{
             throw std::runtime_error("Ticker can only be started once");
@@ -47,50 +51,55 @@ namespace JuggleLib
 
     bool Ticker::IsRunning()
     {
-        return keepTicking_;
+        return nullptr != ticker_ && keepTicking_;
     }
 
     void Ticker::Stop()
     {
         CriticalSection cs(tickingMutex_);
         keepTicking_ = false;
-        if(ticker_->joinable()){
-            ticker_->join();
+        if(nullptr != ticker_){
+            if(ticker_->joinable()){
+                ticker_->join();
+            }
+            delete ticker_;
+            ticker_ = nullptr;
         }
     }
     /// Add a tick slot to the ticker
-    Ticker::Connection Ticker::AddTickResponder(Ticker::Slot tickSlot)
+    Ticker::Connection Ticker::AddTickResponder(const Ticker::Slot& tickSlot)
     {
         return tick_.connect(tickSlot);
     }
     /// remove a connection from the ticker
-    void Ticker::RemoveTickResponder(Ticker::Connection connector)
+    void Ticker::RemoveTickResponder(Ticker::Connection& connector)
     {
         tick_.disconnect(connector);
     }
     /// remove a slot from the ticker
-    void Ticker::RemoveTickResponder(Ticker::Slot tickSlot)
-    {
-        tick_.disconnect(tickSlot);
-    }
+    //void Ticker::RemoveTickResponder(Ticker::TickPublisher::slot_type& tickSlot)
+    //{
+    //    tick_.disconnect(tickSlot);
+    //}
     /// Test if the tick thread should keep running in a thread save manor
     bool Ticker::KeepTicking()
     {
         CriticalSection cs(tickingMutex_);
-        return keepTicking_;
+        return keepTicking_ && !tick_.empty();
     }
     /// the ticker thread and method
-    void Ticker::Tick(TickPublisher& tick, millisecond period)
+    void Ticker::Tick(std::chrono::milliseconds period)
     {
         try{
-            while(KeepTicking() && !tick_.empty()){
-                std::this_thread::sleep_for(period);
-                tick();
+            std::unique_lock<std::mutex> ul(tickingMutex_);
+            while(KeepTicking() && std::cv_status::timeout == tickingCondition_.wait_for(ul, period)){
+                tick_();
             }
         }
         catch(...){
             exceptionPtr_ = std::current_exception();
         }
+
     }
 
 }
