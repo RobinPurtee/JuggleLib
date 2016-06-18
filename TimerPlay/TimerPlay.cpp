@@ -3,12 +3,8 @@
 
 #include "stdafx.h"
 #include <iostream>
-#include <functional>
-#include <thread>
-#include <mutex>
-#include <atomic>
-#include <condition_variable>
-#include <boost/signals2.hpp>
+#include "..\include\Ticker.h"
+#include <boost\timer\timer.hpp>
 
 std::atomic<bool> hasTicked_;
 std::atomic<int> numTicked_;
@@ -40,38 +36,66 @@ std::mutex tickingMutex_;
 /// the ticker conditional
 std::condition_variable tickingCondition_;
 
-/// the ticker function
-void Tick(std::chrono::milliseconds period)
+class TickWrapper
 {
-    try{
-        std::unique_lock<std::mutex> ul(tickingMutex_);
-        while(std::cv_status::timeout == tickingCondition_.wait_for(ul, period)){
-            tickPublisher();
+public:
+
+    /// the ticker function
+    void Tick(std::chrono::milliseconds period)
+    {
+        try{
+            std::unique_lock<std::mutex> ul(tickingMutex_);
+            while(std::cv_status::timeout == tickingCondition_.wait_for(ul, period)){
+                tickPublisher();
+            }
         }
-    }
-    catch(...){
-        exceptionPtr_ = std::current_exception();
-    }
+        catch(...){
+            exceptionPtr_ = std::current_exception();
+        }
 
+    }
+};
+
+std::chrono::milliseconds period(500);
+
+void TestTickerObject()
+{
+    JuggleLib::Ticker ticker(period);
+    JuggleLib::Ticker::Slot slot = std::bind(Ticked);
+//    JuggleLib::Ticker::Connection callbackConnection =  ticker.AddTickResponder(slot);
+    ticker.Start();
+    while(!hasTicked_.load()){
+        std::cout << "waiting" << std::endl;
+        std::this_thread::sleep_for(std::chrono::microseconds(250));
+    }
+    std::cout << "stop Ticker" << std::endl;
+    ticker.Stop();
+ 
 }
-
 
 int _tmain(int argc, _TCHAR* argv[])
 {
     hasTicked_ = false;
     numTicked_ = 0;
 
-    std::chrono::milliseconds period_(1000);
 
-    //JuggleLib::Ticker::TickPublisher::slot_type& slot = std::bind(&TickerTests::Ticked, this);
     std::function<void()> slot = std::bind(Ticked);
     boost::signals2::connection callbackConnection =  tickPublisher.connect(slot);
 
+    {
+    boost::timer::auto_cpu_timer timer;
     std::cout << "start Ticker" << std::endl;
-    tickerThread_ = new std::thread(Tick, period_);
+
+    TickWrapper ticker;
+    tickerThread_ = new std::thread(std::bind(&TickWrapper::Tick, &ticker, period));
     WaitUntilTicked(1);
+    
     std::cout << "stop Ticker" << std::endl;
+    tickingCondition_.notify_all();
+
+    }
     tickPublisher.disconnect(callbackConnection);
+    std::getchar();
     return 0;
 }
 
